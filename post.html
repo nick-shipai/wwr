@@ -162,33 +162,39 @@ function initializeForm() {
             }
 
             // Get the user's username from the Firebase Database
-            const userRef = ref(db, `users/${uid}`);
-            const userSnapshot = await get(userRef);
-            const username = userSnapshot.exists() ? userSnapshot.val().username : 'Anonymous';
-            const profilePic = userSnapshot.exists() ? userSnapshot.val().profilePic : 'profile.png';
+const userRef = ref(db, `users/${uid}`);
+const userSnapshot = await get(userRef);
+let username = 'Anonymous'; // Default value
+let profilePic = 'profile.png'; // Default profile picture
 
-            // Save recipe data to Firebase Database
-            const recipeRef = ref(db, "recipes");
-            const recipeId = push(recipeRef).key;
+if (userSnapshot.exists()) {
+    const userData = userSnapshot.val();
+    username = userData.username || username; // Use the username if it exists
+    profilePic = userData.profilePic || profilePic; // Use the profilePic if it exists, otherwise fallback to default
+}
 
-            const recipeData = {
-                recipeTitle,
-                recipeId: recipeId,
-                foodImage: imageURL,
-                instructions,
-                ingredients,
-                video: videoURL || null,
-                PosterUid: uid,
-                username: username, // Add the username to the recipe data
-                profilePic: profilePic,
-                createdAt: Date.now(),
-            };
+// Save recipe data to Firebase Database
+const recipeRef = ref(db, "recipes");
+const recipeId = push(recipeRef).key;
 
-            const updates = {};
-            updates[`/recipes/${recipeId}`] = recipeData;
-            updates[`/users/${uid}/yourRecipe/${recipeId}`] = recipeData;
+const recipeData = {
+    recipeTitle,
+    recipeId: recipeId,
+    foodImage: imageURL,
+    instructions,
+    ingredients,
+    video: videoURL || null,
+    PosterUid: uid,
+    username: username, // Add the username to the recipe data
+    profilePic: profilePic, // Add the profilePic to the recipe data
+    createdAt: Date.now(),
+};
 
-            await update(ref(db), updates);
+const updates = {};
+updates[`/recipes/${recipeId}`] = recipeData;
+updates[`/users/${uid}/yourRecipe/${recipeId}`] = recipeData;
+
+await update(ref(db), updates);
 
             console.log("posted successful");
             recipeForm.reset();
