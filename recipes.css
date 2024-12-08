@@ -1,0 +1,145 @@
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f9;
+}
+
+/* Recipes Header */
+.recipes-header {
+  background-color: #ff6347;
+  padding: 2rem;
+  text-align: center;
+  color: white;
+}
+
+.recipes-header h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.search-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-bar input {
+  width: 70%;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.search-bar button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  background-color: white;
+  color: #ff6347;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-bar button:hover {
+  background-color: #ffe5e0;
+}
+
+/* Suggested Recipes */
+.suggested-recipes {
+  padding: 2rem;
+}
+
+.suggested-recipes h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+#recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.recipe-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.recipe-card:hover {
+  transform: translateY(-5px);
+}
+
+.recipe-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.recipe-card h3 {
+  font-size: 1.2rem;
+  margin: 1rem;
+  color: #333;
+}
+
+.recipe-card p {
+  margin: 0 1rem 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Suggestions Container */
+.suggestions-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  color: black;
+}
+
+.suggestions-container.visible {
+  display: block;
+}
+
+.suggestion-item {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* Icon Container - Above All Elements */
+#iconDiv {
+  background: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  position: fixed;
+  top: 10px; /* Adjust the position as needed */
+  right: 10px; /* Adjust the position as needed */
+  z-index: 2000; /* Higher z-index to ensure it stays above all other elements */
+  
+  margin-top: 400px;
+}
+
+#icon {
+  height: 30px;
+  margin-top: 10px;
+  margin-left: 10px;
+}

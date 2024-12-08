@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WWR - Recipe App</title>
+  <link rel="stylesheet" href="wwr.css">
+</head>
+<body>
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="logo">WW<span>R</span></div>
+    <div class="profile-icon">
+      <img src="profile.png" alt="Profile" id="profilePic">
+    </div>
+  </header>
+
+  <!-- Main App Content -->
+  <main class="app-content">
+    <iframe id="content-frame" src="home.html" frameborder="0"></iframe>
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <a id="home-btn" class="nav-btn active" onclick="switchTab('home.html')" href="#home">Home</a>
+    <a id="recipes-btn" class="nav-btn" onclick="switchTab('recipes.html')" href="#recipe">Recipes</a>
+    <a id="favorites-btn" class="nav-btn" onclick="switchTab('favorites.html')" href="#favorite">Favorites</a>
+    <a id="profile-btn" class="nav-btn" onclick="switchTab('profile.html')" href="#profile">Profile</a>
+  </footer>
+
+  <script type="module">
+  // Import Firebase libraries
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+  // Your Firebase configuration
+  const firebaseConfig = {
+      apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+      authDomain: "gyfp-48c48.firebaseapp.com",
+      projectId: "gyfp-48c48",
+      storageBucket: "gyfp-48c48.appspot.com",
+      messagingSenderId: "1098492817072",
+      appId: "1:1098492817072:web:19ffb2510028ad75bf1575"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // Check if user is authenticated based on query parameter 'uid' or Firebase authentication state
+  window.addEventListener('load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const uidFromQuery = urlParams.get('uid');
+
+    // Check if the hash in the URL is 'profile' and update iframe accordingly
+    const hash = window.location.hash;
+    if (hash === '#profile') {
+      const uid = auth.currentUser ? auth.currentUser.uid : null;
+      if (uid) {
+        document.getElementById('content-frame').src = `profile.html?uid=${uid}`;
+      }
+    }
+
+    // First, check if there's a logged-in user (using Firebase auth state)
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        if (uidFromQuery && user.uid === uidFromQuery) {
+          // If the user UID from the query matches the logged-in user UID
+          alert('User is authenticated with the correct UID');
+          fetchUserProfilePic(user.uid);
+        } else {
+          // If the user is logged in but no UID in query, treat them as authenticated
+          alert('User is authenticated, no UID needed');
+          fetchUserProfilePic(user.uid);
+        }
+      } else {
+        if (uidFromQuery) {
+          // Check if the uidFromQuery exists in the database for authentication
+          const userRef = ref(db, 'users/' + uidFromQuery);
+          onValue(userRef, snapshot => {
+            if (snapshot.exists()) {
+              alert('User is authenticated via UID');
+              const userData = snapshot.val();
+              document.getElementById('profilePic').src = userData.profilePic || 'profile.png'; // Default profile picture
+            } else {
+              alert('UID not found in database');
+            }
+          }).catch(error => {
+            console.error(error.message);
+          });
+        } else {
+          alert('No authenticated user found');
+        }
+      }
+    });
+  });
+
+  function fetchUserProfilePic(uid) {
+    const userRef = ref(db, 'users/' + uid);
+    onValue(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        document.getElementById('profilePic').src = userData.profilePic || 'profile.png'; // Default profile picture
+      }
+    }, (error) => {
+      console.error("Error fetching profile picture:", error.message);
+    });
+  }
+
+  window.switchTab = function (page) {
+    // Get the user UID from the current authentication state
+    const uid = auth.currentUser ? auth.currentUser.uid : null;
+
+    // If UID exists, add it to the URL
+    const urlWithUid = uid ? `${page}?uid=${uid}` : page;
+
+    // Update iframe content
+    const iframe = document.getElementById('content-frame');
+    iframe.src = urlWithUid;
+
+    // Update active tab style
+    updateActiveTab(urlWithUid);
+  }
+
+  window.updateActiveTab = function (page) {
+    // Get all navigation buttons
+    const buttons = document.querySelectorAll('.nav-btn');
+    
+    // Remove 'active' class from all buttons
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    // Add 'active' class to the correct button based on the page
+    const activeButton = [...buttons].find(btn => {
+      const btnPage = btn.textContent.toLowerCase(); // Get the button's text (home, recipes, etc.)
+      return page.includes(btnPage); // Match the page with the button text
+    });
+    
+    if (activeButton) {
+      activeButton.classList.add('active');
+    }
+  }
+
+  // Set initial active tab based on iframe's src
+  window.addEventListener('load', () => {
+    const iframe = document.getElementById('content-frame');
+    const currentPage = iframe.src.split('/').pop(); // Get the file name from the iframe src
+    
+    // Update the active tab based on the iframe src
+    updateActiveTab(currentPage);
+  });
+
+  // Listen for changes in the iframe src and update the active tab
+  document.getElementById('content-frame').addEventListener('load', () => {
+    const iframe = document.getElementById('content-frame');
+    const currentPage = iframe.src.split('/').pop(); // Get the file name from the src
+    updateActiveTab(currentPage);
+  });
+
+  // Add event listener for profile icon click
+  document.querySelector('.profile-icon').addEventListener('click', () => {
+    const uid = auth.currentUser ? auth.currentUser.uid : null;
+    if (uid) {
+      const iframe = document.getElementById('content-frame');
+      iframe.src = `profile.html?uid=${uid}`;
+    }
+  });
+  </script>
+</body>
+</html>

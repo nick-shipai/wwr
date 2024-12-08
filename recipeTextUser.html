@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe Details - WWR</title>
+  <link rel="stylesheet" href="recipeTextUser.css">
+</head>
+<body>
+  <section class="recipe-header">
+    <button onclick="window.history.back()">Back to Recipes</button>
+  </section>
+
+  <section id="user-details">
+    <div id="user-img-con">
+      <img src="profile.png" alt="user-img" id="user-img">
+    </div>
+    <div id="username">Mercy David</div>
+    <button id="follow">Follow</button>
+  </section>
+
+  <section id="foodImageCon">
+    <img src="thumbnails.jpg" alt="" id="foodImage">
+  </section><br>
+
+  <label for="ingredient">Ingredients</label><br><br>
+  <section id="ingredients-con">
+      Loading...
+  </section><br>
+
+  <label for="ingredient">Instructions</label><br><br>
+  
+  <section id="instructions-con">
+      Loading...
+  </section>
+
+  <script type="module">
+  // Import Firebase libraries
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+  import { getDatabase, ref, get, update, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+    authDomain: "gyfp-48c48.firebaseapp.com",
+    databaseURL: "https://gyfp-48c48-default-rtdb.firebaseio.com/",
+    projectId: "gyfp-48c48",
+    storageBucket: "gyfp-48c48.appspot.com",
+    messagingSenderId: "1098492817072",
+    appId: "1:1098492817072:web:19ffb2510028ad75bf1575",
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  // Get query parameters (currentUid and recipeId) from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentUid = urlParams.get("uid");
+  const recipeId = urlParams.get("recipeId");
+
+  // Check if the user is authenticated
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.uid === currentUid) {
+      // User is authenticated, fetch recipe data
+      if (recipeId) {
+        const recipeRef = ref(db, 'recipes/' + recipeId);
+        get(recipeRef).then((snapshot) => {
+          if (snapshot.exists()) {
+            const recipeData = snapshot.val();
+            const recipeImage = recipeData.foodImage || 'https://via.placeholder.com/400x400';
+            const recipeIngredients = recipeData.ingredients || 'No ingredients available';
+            const recipeInstructions = recipeData.instructions || 'No instructions available';
+            const posterUid = recipeData.PosterUid || '';
+
+            // Set recipe details
+            document.getElementById("foodImage").src = recipeImage;
+            document.getElementById("ingredients-con").textContent = recipeIngredients;
+            document.getElementById("instructions-con").textContent = recipeInstructions;
+
+            // Fetch poster's username and profilePic based on posterUid
+            if (posterUid) {
+              const posterRef = ref(db, 'users/' + posterUid);
+              get(posterRef).then((posterSnapshot) => {
+                if (posterSnapshot.exists()) {
+                  const posterData = posterSnapshot.val();
+                  const posterUsername = posterData.username || 'Poster User';
+                  const posterProfilePic = posterData.profilePic || 'profile.png';
+
+                  // Set the poster's profile image and username
+                  document.getElementById("user-img").src = posterProfilePic;
+                  document.getElementById("username").textContent = posterUsername;
+
+                  // Check if the current user is following the poster
+                  checkIfFollowing(currentUid, posterUid);
+                } else {
+                  console.log("No poster data found for this posterUid.");
+                }
+              }).catch((error) => {
+                console.error("Error fetching poster data:", error);
+              });
+            }
+
+            // Fetch current user (follower) details
+            const userRef = ref(db, 'users/' + currentUid);
+            get(userRef).then((snapshot) => {
+              if (snapshot.exists()) {
+                const userData = snapshot.val();
+                const currentUsername = userData.username || 'Unknown User';
+
+                // Function to toggle follow/unfollow functionality
+                document.getElementById("follow").onclick = () => {
+                  toggleFollow(currentUid, posterUid);
+                };
+              }
+            }).catch((error) => {
+              console.error("Error fetching user data:", error);
+            });
+
+          } else {
+            console.log("No recipe data found for this recipeId.");
+          }
+        }).catch((error) => {
+          console.error("Error fetching recipe data:", error);
+        });
+      } else {
+        console.log("No recipeId in the URL query string.");
+      }
+    } else {
+      console.log("User not authenticated or UID mismatch.");
+      window.location.href = 'auth.html'; // Replace with actual login page
+    }
+  });
+
+  // Function to check if the current user is following the poster
+  function checkIfFollowing(currentUid, posterUid) {
+    const followingRef = ref(db, 'users/' + currentUid + '/following/' + posterUid);
+    get(followingRef).then((snapshot) => {
+      const followButton = document.getElementById("follow");
+      if (snapshot.exists()) {
+        followButton.textContent = 'Following'; // Change button text to Following
+      } else {
+        followButton.textContent = 'Follow'; // Change button text to Follow
+      }
+    }).catch((error) => {
+      console.error("Error checking following status:", error);
+    });
+  }
+
+// Function to toggle follow/unfollow functionality
+function toggleFollow(currentUid, posterUid) {
+  const followingRef = ref(db, 'users/' + currentUid + '/following/' + posterUid);
+  const followersRef = ref(db, 'users/' + posterUid + '/followers/' + currentUid);
+  const followButton = document.getElementById("follow");
+
+  get(followingRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      // If following, unfollow the user
+      remove(followingRef).then(() => {
+        console.log("Unfollowed user successfully!");
+        followButton.textContent = 'Follow'; // Change button text to Follow
+      }).catch((error) => {
+        console.error("Error unfollowing user:", error);
+      });
+
+      // Remove the follower from the poster's followers list
+      remove(followersRef).then(() => {
+        console.log("Removed follower from poster's followers list!");
+      }).catch((error) => {
+        console.error("Error removing follower:", error);
+      });
+
+    } else {
+      // If not following, follow the user
+      const posterUsername = document.getElementById("username").textContent;
+
+      // Fetch current user details to get currentUsername
+      const userRef = ref(db, 'users/' + currentUid);
+      get(userRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          const currentUsername = userData.username || 'Unknown User';
+
+          // Add the poster to the current user's following list
+          update(followingRef, {
+            username: posterUsername,
+            uid: posterUid
+          }).then(() => {
+            console.log("Followed user successfully in following list!");
+            followButton.textContent = 'Following'; // Change button text to Following
+          }).catch((error) => {
+            console.error("Error following user:", error);
+          });
+
+          // Add the current user to the poster's followers list
+          update(followersRef, {
+            username: currentUsername, // Store current user as the follower
+            uid: currentUid
+          }).then(() => {
+            console.log("Added follower successfully to the poster's followers list!");
+          }).catch((error) => {
+            console.error("Error adding follower:", error);
+          });
+        } else {
+          console.log("No user data found for current user.");
+        }
+      }).catch((error) => {
+        console.error("Error fetching user data:", error);
+      });
+    }
+  }).catch((error) => {
+    console.error("Error checking follow status:", error);
+  });
+}
+  
+</script>
+</body>
+</html>

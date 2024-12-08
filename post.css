@@ -1,0 +1,275 @@
+/* Resetting margin, padding, and setting box-sizing for all elements */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: white; /* Slightly off-white for a soft look */
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Container Styles */
+#container {
+    max-width: 800px;
+    margin: 50px auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+/* Header Style */
+header h1 {
+    text-align: center;
+    color: #ff6347; /* Tomato color */
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
+
+/* Form Section Padding */
+.form-section {
+    padding: 20px;
+}
+
+/* Form Layout */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Added gap for consistent spacing */
+}
+
+/* Label Styling */
+label {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+/* Input and Textarea Styles */
+input[type="text"], textarea, input[type="file"] {
+    padding: 12px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline-color: #ff6347;
+    transition: border-color 0.3s ease; /* Smooth transition for focus */
+}
+
+/* Focus State for Inputs */
+input[type="text"]:focus, textarea:focus, input[type="file"]:focus {
+    border-color: #ff6347; /* Highlight border on focus */
+}
+
+/* Textarea Styling */
+textarea {
+    resize: vertical;
+    height: 150px; /* Minimum height */
+}
+
+/* Submit Button Styling */
+button {
+    padding: 12px;
+    background-color: #ff6347;
+    color: #fff;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Button Hover State */
+button:hover {
+    background-color: #ff4e50; /* Slightly darker red on hover */
+}
+
+/* Disabled Button */
+button:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+}
+
+/* Image Container (No Image Styling) */
+ 
+
+/* Responsive Styling for Smaller Screens */
+@media (max-width: 768px) {
+    #container {
+        padding: 20px;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    .form-section {
+        padding: 10px;
+    }
+
+    form {
+        gap: 10px; /* Slightly smaller gap on smaller screens */
+    }
+
+    button {
+        font-size: 1rem;
+        padding: 10px;
+    }
+}
+#icon {
+    height: 50px;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+#image-con {
+    height: 80px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: flex;
+    
+}
+#text {
+    font-weight: bold;
+    margin-left: 30px;
+    font-size: 1.5rem;
+    margin-top: 15px;
+}
+.switch {
+  position: relative;
+  width: 60px;
+  height: 34px;
+  background-color: #ccc;
+  border-radius: 34px;
+  margin-left: 110px;
+  margin-top: 7px;
+}
+
+.slider {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background-color: white;
+  border-radius: 50%;
+  top: 4px;
+  left: 4px;
+  transition: 0.4s;
+}
+
+.switch.active {
+  background-color: #4caf50;
+}
+
+.switch.active .slider {
+  transform: translateX(26px);
+}
+#earnDiv {
+    display: flex;
+}
+#earnDiv span {
+    margin-top: 13px;
+    font-weight: bold;
+}
+#video-con {
+    height: 80px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: flex;
+}
+
+#submit-recipe {
+    padding: 12px;
+    background-color: #ff6347;
+    color: #fff;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#button-text {
+    display: block;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px; /* Small size for the animation */
+    height: 20px;
+  
+}
+
+svg {
+    width: 100%;
+    height: 100%;
+}
+
+path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    animation: drawR 1.5s ease-in-out infinite;
+}
+
+@keyframes drawR {
+    0% {
+        stroke-dashoffset: 400;
+    }
+    50% {
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dashoffset: 400;
+    }
+}
+/* Modal styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+#close-modal {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    margin-left: 500px;
+}
+
+#close-modal:hover {
+    background-color: #45a049;
+}

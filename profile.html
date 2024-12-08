@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Page</title>
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <div id="container">
+        <div id="profilePicDiv">
+            <img src="profile.png" alt="" id="profilePic">
+        </div>
+        <div id="username"></div>
+        <div id="email"></div>
+        <button id="edit-pro">Edit Profile</button><br>
+        <div id="event">Profile</div>
+        <div id="cards">
+            <div id="myRecipe">
+                <div id="iconDiv">
+                    <img src="recipe.png" alt="recipe-icon" id="recipe-icon">
+                </div>
+                <div id="text">My Recipes</div>
+                <div id="totalRecipe">
+                    <span>20</span>
+                </div>
+                <img src="arrow.png" alt="" id="openProRec" class="arrow">
+            </div>
+            <div id="long-line"></div>
+            <div id="professional-acc">
+                <div id="iconDiv">
+                    <img src="earnAcc.png" alt="earnAcc-icon" id="earnAcc-icon">
+                </div>
+                <div id="text">Professional Account</div>
+                <img src="arrow.png" alt="" id="openProAcc">
+            </div>
+        </div>
+        <div id="event">Account</div>
+        <div id="card2">
+            <div id="send-mail">
+                <div id="iconDiv">
+                    <img src="mail.png" alt="" id="mailIcon">
+                </div>
+                <div id="text">Send Email</div>
+                <div class="switch">
+                    <div class="slider"></div>
+                </div>
+            </div>
+            <div id="long-line"></div>
+            <div id="about">
+                <div id="iconDiv">
+                    <img src="about.png" alt="about-icon" id="about-icon">
+                </div>
+                <div id="text">About</div>
+                <img src="arrow.png" alt="arrow-icon" id="openAbout">
+            </div>
+            <div id="long-line"></div>
+            <div id="log-out">
+                <div id="logOutDivIcon">
+                    <img src="log-out.png" alt="" id="logOutIcon">
+                </div>
+                <div id="log-out-text">Log Out</div>
+            </div><br><br>
+        </div>
+    </div>
+    
+    <!-- Hidden File Input -->
+    <input type="file" id="fileInput" style="display:none" accept="image/*">
+
+    <script type="module">
+        // Import Firebase libraries
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+            authDomain: "gyfp-48c48.firebaseapp.com",
+            projectId: "gyfp-48c48",
+            storageBucket: "gyfp-48c48.appspot.com",
+            messagingSenderId: "1098492817072",
+            appId: "1:1098492817072:web:19ffb2510028ad75bf1575"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+
+        // Check if user is authenticated based on query parameter 'uid' or Firebase authentication state
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uidFromQuery = urlParams.get('uid');
+
+            // First, check if there's a logged-in user (using Firebase auth state)
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    if (uidFromQuery && user.uid === uidFromQuery) {
+                        fetchUserData(user.uid);
+                    } else {
+                        alert('User is authenticated, but no matching UID in query');
+                        fetchUserData(user.uid);
+                    }
+                } else {
+                    if (uidFromQuery) {
+                        const userRef = ref(db, 'users/' + uidFromQuery);
+                        get(userRef).then(snapshot => {
+                            if (snapshot.exists()) {
+                                fetchUserData(uidFromQuery);
+                            } else {
+                                alert('UID not found in database');
+                            }
+                        }).catch(error => {
+                            console.error(error.message);
+                        });
+                    } else {
+                        alert('No authenticated user found');
+                    }
+                }
+            });
+        });
+
+        // Function to fetch user data from Firebase
+        function fetchUserData(uid) {
+            const userRef = ref(db, 'users/' + uid);
+            get(userRef).then(snapshot => {
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    document.getElementById('username').innerText = userData.username || 'Username not available';
+                    document.getElementById('email').innerText = userData.email || 'Email not available';
+                    if (userData.profilePic) {
+                        document.getElementById('profilePic').src = userData.profilePic;
+                    }
+                }
+            }).catch(error => {
+                console.error("Error fetching user data:", error.message);
+            });
+        }
+
+        // Profile picture upload functionality
+        document.getElementById('profilePicDiv').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const storageReference = storageRef(storage, 'profile_pics/' + file.name);
+                const uploadTask = uploadBytesResumable(storageReference, file);
+
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        // Optional: Show progress of file upload
+                    },
+                    (error) => {
+                        console.error("Error uploading file:", error);
+                        alert("Error uploading profile picture.");
+                    },
+                    () => {
+                        // Get the download URL
+                        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                            const user = auth.currentUser;
+                            if (user) {
+                                const userRef = ref(db, 'users/' + user.uid);
+                                update(userRef, { profilePic: downloadURL }).then(() => {
+                                    // Update the profile picture in the DOM
+                                    document.getElementById('profilePic').src = downloadURL;
+                                }).catch((error) => {
+                                    console.error("Error updating profile picture URL:", error);
+                                });
+                            }
+                        });
+                    }
+                );
+            }
+        });
+
+        // Log out functionality
+        document.getElementById('log-out').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = "auth.html";
+            }).catch((error) => {
+                console.error("Error signing out:", error.message);
+                alert("An error occurred while logging out.");
+            });
+        });
+    </script>
+
+    <script>
+        // Switch class for toggling active state
+        const switchDiv = document.querySelector('.switch');
+        switchDiv.addEventListener('click', () => {
+            switchDiv.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

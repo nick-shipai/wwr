@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipes - WWR</title>
+  <link rel="stylesheet" href="recipes.css">
+  <!-- Include Font Awesome CDN for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script defer type="module">
+    // Import Firebase libraries
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+      authDomain: "gyfp-48c48.firebaseapp.com",
+      projectId: "gyfp-48c48",
+      storageBucket: "gyfp-48c48.appspot.com",
+      messagingSenderId: "1098492817072",
+      appId: "1:1098492817072:web:19ffb2510028ad75bf1575",
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Function to fetch recipes from Spoonacular API
+    async function fetchSpoonacularRecipes(query = "") {
+      try {
+        const SPOONACULAR_API_KEY = "bf85aa8b4930407eba7394b915ced153";
+        const url = `https://api.spoonacular.com/recipes/complexSearch?apiKey=${SPOONACULAR_API_KEY}&query=${query}&number=5`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      } catch (error) {
+        console.error("Error fetching recipes from Spoonacular:", error);
+        return [];
+      }
+    }
+
+    // Function to fetch recipes from TheMealDB API
+    async function fetchMealDBRecipes(query = "") {
+      try {
+        const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.meals || [];
+      } catch (error) {
+        console.error("Error fetching recipes from TheMealDB:", error);
+        return [];
+      }
+    }
+
+    // Function to fetch and filter Firebase recipes
+    async function fetchFirebaseRecipes(query = "") {
+      const db = getDatabase(app);
+      const recipesRef = ref(db, 'recipes');
+      return new Promise((resolve) => {
+        onValue(recipesRef, (snapshot) => {
+          const data = snapshot.val();
+          if (!data) {
+            resolve([]);
+            return;
+          }
+
+          // Filter recipes by query
+          const filteredRecipes = Object.values(data).filter((recipe) =>
+            recipe.recipeTitle.toLowerCase().includes(query.toLowerCase())
+          );
+          resolve(filteredRecipes);
+        });
+      });
+    }
+
+// Function to fetch and display all recipes
+async function fetchAllSuggestedRecipes(query = "") {
+  const recipesGrid = document.getElementById("recipes-grid");
+  recipesGrid.innerHTML = "<p>Loading recipes...</p>";
+
+  try {
+    const [firebaseRecipes, spoonacularRecipes, mealDBRecipes] = await Promise.all([
+      fetchFirebaseRecipes(query),
+      fetchSpoonacularRecipes(query),
+      fetchMealDBRecipes(query),
+    ]);
+
+    const allRecipes = [
+      ...firebaseRecipes.map((recipe) => {
+        if (!recipe.recipeId) {
+         
+        }
+        return {
+          title: recipe.recipeTitle,
+          recipeId: recipe.recipeId,  // Firebase uses recipeId
+          image: recipe.foodImage || 'https://via.placeholder.com/400x400',
+          link: `recipeTextUser.html?uid=${auth.currentUser?.uid}&recipeId=${recipe.recipeId}`,
+        };
+      }),
+      ...spoonacularRecipes.map((recipe) => {
+        if (!recipe.id) {
+          console.error("Spoonacular recipe missing id:", recipe);  // Debugging line
+        }
+        return {
+          title: recipe.title,
+          recipeId: recipe.id,  // Spoonacular uses 'id' as recipeId
+          image: recipe.image || 'https://via.placeholder.com/400x400',
+          link: `recipeText.html?id=${recipe.id}`,
+        };
+      }),
+      ...mealDBRecipes.map((recipe) => {
+        if (!recipe.idMeal) {
+          console.error("MealDB recipe missing idMeal:", recipe);  // Debugging line
+        }
+        return {
+          title: recipe.strMeal,
+          recipeId: recipe.idMeal,  // MealDB uses 'idMeal' as recipeId
+          image: recipe.strMealThumb || 'https://via.placeholder.com/400x400',
+          link: `recipeText.html?id=${recipe.idMeal}`,
+        };
+      }),
+    ];
+
+    // Shuffle the array to ensure different order every time
+    const shuffledRecipes = allRecipes.sort(() => Math.random() - 0.5);
+
+    // Display recipes in the grid
+    recipesGrid.innerHTML = "";
+    if (shuffledRecipes.length === 0) {
+      recipesGrid.innerHTML = "<p>No recipes found.</p>";
+      return;
+    }
+
+    shuffledRecipes.forEach((recipe) => {
+      if (!recipe.recipeId) {
+        
+        return;  // Skip if recipeId is missing
+      }
+
+      const recipeCard = document.createElement("div");
+      recipeCard.classList.add("recipe-card");
+
+  // Create the favorite icon (Font Awesome heart)
+const favoriteIcon = document.createElement("i");
+favoriteIcon.classList.add("fas", "fa-heart");
+favoriteIcon.style.cursor = "pointer";
+favoriteIcon.style.color = "gray"; // Default color (unfavorite state)
+favoriteIcon.style.marginLeft = "260px";
+favoriteIcon.style.marginBottom = "15px";
+favoriteIcon.style.fontSize = "30px";
+
+// Initialize the favorite status
+let isFavorite = false;
+
+// Check if the recipe is already favorited by the current user
+const user = auth.currentUser;
+if (user) {
+  const favoritesRef = ref(getDatabase(app), `users/${user.uid}/favorites`);
+  onValue(favoritesRef, (snapshot) => {
+    const favorites = snapshot.val() || {};
+    // Check if the recipe is already in the favorites (adjusted for structure: favRecId: recipeId)
+    isFavorite = Object.keys(favorites).includes(`favRecId:${recipe.recipeId}`);
+    favoriteIcon.style.color = isFavorite ? "red" : "gray"; // Update icon color
+  });
+}
+
+// Add event listener for the favorite icon
+favoriteIcon.addEventListener("click", () => {
+  if (!auth.currentUser) {
+    alert("You must be logged in to favorite a recipe.");
+    return;
+  }
+
+  const userRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites`);
+
+  if (isFavorite) {
+    // Remove from favorites using the adjusted path
+    const favoriteRecipeRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites/favRecId:${recipe.recipeId}`);
+    remove(favoriteRecipeRef)
+      .then(() => {
+        alert(`${recipe.title} has been removed from favorites.`);
+        favoriteIcon.style.color = "gray"; // Update icon color
+      })
+      .catch((error) => {
+        console.error("Error removing favorite:", error);
+      });
+  } else {
+    // Add to favorites using the adjusted path with more details (foodImage and recipe title)
+    const favoriteRecipeRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites/favRecId:${recipe.recipeId}`);
+    const favoriteData = {
+      foodImage: recipe.image, // Store the image URL
+      recipe: recipe.title, // Store the recipe title
+    };
+    set(favoriteRecipeRef, favoriteData)
+      .then(() => {
+        alert(`${recipe.title} has been added to favorites.`);
+        favoriteIcon.style.color = "red"; // Update icon color
+      })
+      .catch((error) => {
+        console.error("Error adding favorite:", error);
+      });
+  }
+
+  // Toggle the in-memory favorite status
+  isFavorite = !isFavorite;
+});
+
+      recipeCard.innerHTML = `
+        <a href="${recipe.link}">
+          <img src="${recipe.image}" alt="${recipe.title}">
+          <h3>${recipe.title}</h3>
+        </a>
+      `;
+      
+      // Append the favorite icon to the recipe card
+      recipeCard.appendChild(favoriteIcon);
+
+      // Append the recipe card to the grid
+      recipesGrid.appendChild(recipeCard);
+    });
+  } catch (error) {
+    console.error("Error fetching and displaying recipes:", error);
+    recipesGrid.innerHTML = "<p>Failed to load recipes. Please try again later.</p>";
+  }
+}
+
+    // Fetch search suggestions dynamically
+    async function fetchSearchSuggestions(query) {
+      if (query.length < 3) {
+        return []; // Only fetch suggestions for queries with 3 or more characters
+      }
+      const [firebaseSuggestions, spoonacularSuggestions, mealDBSuggestions] = await Promise.all([
+        fetchFirebaseRecipes(query),
+        fetchSpoonacularRecipes(query),
+        fetchMealDBRecipes(query),
+      ]);
+
+      const allSuggestions = [
+        ...firebaseSuggestions.map((recipe) => recipe.recipeTitle),
+        ...spoonacularSuggestions.map((recipe) => recipe.title),
+        ...mealDBSuggestions.map((recipe) => recipe.strMeal),
+      ];
+
+      // Filter and return unique suggestions
+      return [...new Set(allSuggestions)].slice(0, 5);
+    }
+
+    // Event listeners for the search bar and suggestions
+    document.addEventListener("DOMContentLoaded", () => {
+      const searchInput = document.getElementById("search-input");
+      const searchBtn = document.getElementById("search-btn");
+      const suggestionsList = document.getElementById("suggestions-list");
+
+      // Fetch recipes on page load with URL query if available
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialQuery = urlParams.get("category") || "";
+      searchInput.value = initialQuery;
+      fetchAllSuggestedRecipes(initialQuery);
+
+      // Check for `uid` in the URL query string
+      const uid = urlParams.get("uid");
+      if (uid) {
+        console.log("User authenticated");
+      } else {
+        // Check if the user is logged in
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            console.log("User authenticated with UID:", user.uid);
+          } else {
+            console.log("User not authenticated");
+          }
+        });
+      }
+
+      // Trigger search on button click
+      searchBtn.addEventListener("click", () => {
+        const query = searchInput.value.trim();
+        fetchAllSuggestedRecipes(query);
+      });
+
+      // Trigger search on pressing "Enter"
+      searchInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          const query = searchInput.value.trim();
+          fetchAllSuggestedRecipes(query);
+        }
+      });
+
+      // Show suggestions while typing
+      searchInput.addEventListener("input", async () => {
+        const query = searchInput.value.trim();
+        if (query.length > 0) {
+          const suggestions = await fetchSearchSuggestions(query);
+          suggestionsList.innerHTML = suggestions.map(suggestion => `<li>${suggestion}</li>`).join('');
+          suggestionsList.style.display = suggestions.length > 0 ? 'block' : 'none';
+        } else {
+          suggestionsList.style.display = 'none';
+        }
+      });
+
+      // Handle suggestion click
+      suggestionsList.addEventListener("click", (e) => {
+        if (e.target.tagName === 'LI') {
+          searchInput.value = e.target.textContent;
+          fetchAllSuggestedRecipes(e.target.textContent);
+          suggestionsList.style.display = 'none';
+        }
+      });
+
+      // Hide suggestions list when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!searchInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+          suggestionsList.style.display = 'none';
+        }
+      });
+
+      // Handle click on iconDiv
+      const iconDiv = document.getElementById("iconDiv");
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          iconDiv.addEventListener("click", () => {
+            window.location.href = `post.html?uid=${user.uid}`;
+          });
+        } else {
+          iconDiv.addEventListener("click", () => {
+            alert("You must be logged in to post.");
+          });
+        }
+      });
+    });
+  </script>
+  <style>
+    /* Styles for suggestions dropdown */
+    #suggestions-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #ccc;
+      position: absolute;
+      background-color: white;
+      width: 250px;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+      z-index: 10;
+      margin-top: 200px;
+      color: black;
+      border-radius: 10px;
+      margin-left: -50px;
+    }
+
+    #suggestions-list li {
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    #suggestions-list li:hover {
+      background-color: #f0f0f0;
+    }
+
+    #iconDiv {
+      background: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      position: fixed;
+      top: 10px; /* Adjust the position as needed */
+      right: 10px; /* Adjust the position as needed */
+      z-index: 2000;
+    }
+
+    #icon {
+      height: 30px;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Recipes Header -->
+  <section class="recipes-header">
+    <h1>Find Your Favorite Recipes</h1>
+    <section class="search-bar">
+      <input type="search" id="search-input" placeholder="Search recipes...">
+      <button id="search-btn">Search</button>
+      <ul id="suggestions-list"></ul> <!-- Suggestions list -->
+    </section>
+  </section>
+
+  <!-- Suggested Recipes -->
+  <section class="suggested-recipes">
+    <h2>Suggested Recipes</h2>
+    <div id="recipes-grid">
+      <!-- Recipes will be dynamically loaded here -->
+    </div>
+  </section>
+
+  <div id="iconDiv">
+    <img src="add.png" alt="" id="icon">
+  </div>
+</body>
+</html>

@@ -1,0 +1,183 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+#profilePicDiv {
+    background-color: #F5F5DC;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-left: 137px;
+    margin-top: 20px;
+    border: 1px solid #d2d2d2;
+}
+#profilePic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+#username {
+   text-align: center;
+   font-size: 2rem;
+   font-weight: bold;
+   margin-top: 0.3rem;
+}
+#email {
+    text-align: center;
+    color: grey;
+    margin-top: 0.2rem;
+}
+#edit-pro {
+    text-align: center;
+    background-color: black;
+    margin-left: 103px;
+    width: 150px;
+    color: white;
+    height: 40px;
+    border: 1px solid white;
+    border-radius: 20px;
+    margin-top: 16px;
+    font-size: 23px;
+}
+#event {
+    margin-left: 2rem;
+    margin-top: 30px;
+    color: grey;
+}
+#cards {
+    background-color: #f3f4f6;
+    height: 130px;;
+    width: 330px;
+    opacity: 1px;
+    margin-left: 10px;
+    border-radius: 20px;
+    margin-top: 10px;
+    padding: 5px;
+    
+}
+#recipe-icon, #earnAcc-icon, #mailIcon, #about-icon, #logOutIcon {
+    height: 30px;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+#iconDiv {
+    background: white;
+    width: 50px;
+    margin-left: 10px;
+    height: 50px;
+    border-radius: 50%;
+    
+}
+#myRecipe {
+    display: flex;
+}
+#text {
+    margin-left: 10px;
+    font-size: 1.2rem;
+    margin-top: 15px;
+    font-weight: bold;
+}
+#totalRecipe {
+    background-color: green;
+    height: 30px;
+    width: 30px;
+    border-radius: 50%;
+    color: white;
+    margin-top: 10px;
+    margin-left: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px; /* Adjust as needed */
+    font-weight: bold; /* Optional for better visibility */
+}
+
+#totalRecipe span {
+    margin: 0; /* Remove unnecessary margin */
+}
+.arrow {
+    height: 30px;
+    margin-left: 100px;
+    margin-top: 10px;
+}
+ #long-line {
+            height: 2px; /* Thickness of the line */
+            background-color: #d2d2d2; /* Line color */
+            width: 290px;; /* Full width */
+            margin: 10px ;
+            margin-left: 17px;
+}
+#professional-acc {
+    display: flex;
+}
+#openProAcc {
+    height: 30px;
+    margin-top: 10px;
+    margin-left: 64px;
+}
+#card2 {
+    background-color: #f3f4f6;
+    height: 200px;;
+    width: 330px;
+    opacity: 1px;
+    margin-left: 10px;
+    border-radius: 20px;
+    margin-top: 10px;
+    padding: 5px;
+}
+#send-mail {
+    display: flex;
+}
+.switch {
+  position: relative;
+  width: 60px;
+  height: 34px;
+  background-color: #ccc;
+  border-radius: 34px;
+  margin-left: 110px;
+  margin-top: 7px;
+}
+
+.slider {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background-color: white;
+  border-radius: 50%;
+  top: 4px;
+  left: 4px;
+  transition: 0.4s;
+}
+
+.switch.active {
+  background-color: #4caf50;
+}
+
+.switch.active .slider {
+  transform: translateX(26px);
+}
+#about {
+    display: flex;
+}
+#openAbout {
+    height: 30px;
+    margin-top: 10px;
+    margin-left: 177px;
+}
+#log-out {
+    display: flex;
+}
+#logOutDivIcon {
+    background: white;
+    width: 50px;
+    margin-left: 10px;
+    height: 50px;
+    border-radius: 50%;
+}
+#log-out-text {
+    margin-left: 10px;
+    font-size: 1.2rem;
+    margin-top: 15px;
+    font-weight: bold;
+    color: red;
+}
