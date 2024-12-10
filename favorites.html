@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorite Recipes</title>
+    <style>
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .recipe-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer; /* Indicate that the card is clickable */
+        }
+        .recipe-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #ff6347;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Favorite Recipes</h1>
+    <div id="recipeGrid" class="recipe-grid"></div>
+
+    <script type="module">
+        // Import Firebase libraries
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+            authDomain: "gyfp-48c48.firebaseapp.com",
+            projectId: "gyfp-48c48",
+            storageBucket: "gyfp-48c48.appspot.com",
+            messagingSenderId: "1098492817072",
+            appId: "1:1098492817072:web:19ffb2510028ad75bf1575",
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Get query parameter (uid)
+        const urlParams = new URLSearchParams(window.location.search);
+        let uid = urlParams.get("uid");
+
+        // Function to fetch and display favorite recipes
+        const recipeGrid = document.getElementById("recipeGrid");
+
+        function fetchFavorites(userUid) {
+            const favoritesRef = ref(database, `users/${userUid}/favorites`);
+
+            onValue(favoritesRef, (snapshot) => {
+                const favorites = snapshot.val() || {};
+                recipeGrid.innerHTML = ""; // Clear existing content
+
+                if (Object.keys(favorites).length === 0) {
+                    recipeGrid.innerHTML = "<p>No favorite recipes found!</p>";
+                    return;
+                }
+
+                // Loop over the favorite recipe IDs
+                Object.keys(favorites).forEach((favoriteKey) => {
+                    let recipeData = favorites[favoriteKey]; // This should now contain recipeId, foodImage, and title
+
+                    // Ensure the recipe data contains the required fields
+                    if (recipeData && recipeData.recipe && recipeData.foodImage && typeof recipeData.recipe === 'string') {
+
+                        // Create a card for the recipe
+                        const recipeCard = document.createElement("div");
+                        recipeCard.classList.add("recipe-card");
+
+                        recipeCard.innerHTML = `
+                            <img src="${recipeData.foodImage}" alt="${recipeData.recipe}">
+                            <h3>${recipeData.recipe}</h3>
+                            <p>No description available.</p> <!-- Description can be added if available -->
+                        `;
+
+                        // Add event listener to handle click and navigate to the recipe page
+                        recipeCard.addEventListener('click', () => {
+                            const recipeTitle = recipeData.recipe || recipeData.recipeTitle;
+                            const encodedTitle = encodeURIComponent(recipeTitle);
+                            window.location.href = `recipes.html?category=${encodedTitle}`;
+                        });
+
+                        recipeGrid.appendChild(recipeCard);
+                    } else {
+                        console.error('Invalid recipe data:', recipeData);
+                    }
+                });
+            });
+        }
+
+        // Authenticate user and determine UID
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // If UID is not provided in the query string, use the authenticated user's UID
+                uid = uid || user.uid;
+                fetchFavorites(uid);
+            } else {
+                window.open("auth.html", "_blank");
+                recipeGrid.innerHTML = "<p>You must be logged in to view your favorite recipes.</p>";
+            }
+        });
+    </script>
+</body>
+</html>

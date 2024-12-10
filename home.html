@@ -5,7 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>World Wide Recipe</title>
     <link rel="stylesheet" href="home.css">
-    <script defer src="home.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script type="module" defer>
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+    // Spoonacular API details
+    const SPOONACULAR_API_KEY = "bf85aa8b4930407eba7394b915ced153";
+    const SPOONACULAR_BASE_URL = "https://api.spoonacular.com/recipes/random"; // Changed endpoint to fetch random recipes
+
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+        authDomain: "gyfp-48c48.firebaseapp.com",
+        projectId: "gyfp-48c48",
+        storageBucket: "gyfp-48c48.appspot.com",
+        messagingSenderId: "1098492817072",
+        appId: "1:1098492817072:web:19ffb2510028ad75bf1575"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    // Function to fetch random recipes from Spoonacular API
+    async function fetchSpoonacularRandomRecipe() {
+        try {
+            const response = await fetch(`${SPOONACULAR_BASE_URL}?number=1&apiKey=${SPOONACULAR_API_KEY}`);
+            const data = await response.json();
+
+            if (data.recipes && data.recipes.length > 0) {
+                return data.recipes[0]; // Return the first random recipe
+            }
+        } catch (error) {
+            console.error('Error fetching Spoonacular recipe:', error);
+        }
+        return null;
+    }
+
+    // Function to fetch recipes from Firebase
+    async function fetchFirebaseRecipes() {
+        const recipesRef = ref(database, 'recipes');
+        return new Promise((resolve, reject) => {
+            onValue(recipesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const recipes = [];
+                    snapshot.forEach((childSnapshot) => {
+                        recipes.push(childSnapshot.val());
+                    });
+                    resolve(recipes);
+                } else {
+                    resolve([]); // Return empty array if no data
+                }
+            }, reject);
+        });
+    }
+
+    // Random selection helper function
+    function getRandomRecipe(recipes) {
+        const randomIndex = Math.floor(Math.random() * recipes.length);
+        return recipes[randomIndex];
+    }
+
+    // Function to render recipe in the grid
+    function renderRecipe(recipe, source) {
+        const categoriesGrid = document.getElementById('categories-grid');
+        const recipeElement = document.createElement('div');
+        recipeElement.classList.add('category');
+
+        const recipeImage = document.createElement('img');
+        recipeImage.src = recipe.image || recipe.foodImage || "default.jpg"; // Fallback image
+        recipeImage.alt = recipe.title || recipe.recipeTitle || "Recipe";
+
+        const recipeName = document.createElement('p');
+        recipeName.textContent = recipe.title || recipe.recipeTitle || "Random Recipe";
+
+        // Create a link to the recipe page
+        const recipeLink = document.createElement('a');
+        recipeLink.id = 'recipeLink';
+        recipeLink.style.textDecoration = 'none';
+        recipeLink.href = `recipes.html?category=${encodeURIComponent(recipe.title || recipe.recipeTitle)}`;
+
+        // Add the image and name inside the link
+        recipeLink.appendChild(recipeImage);
+        recipeLink.appendChild(recipeName);
+
+        // Append the link to the grid
+        recipeElement.appendChild(recipeLink);
+        categoriesGrid.appendChild(recipeElement);
+    }
+
+    // Fetch and display random recipes
+    async function loadRandomRecipes() {
+        // First, attempt to fetch a random recipe from Spoonacular
+        const spoonacularRecipe = await fetchSpoonacularRandomRecipe();
+
+        // If Spoonacular doesn't return a recipe, fallback to Firebase
+        if (!spoonacularRecipe) {
+            console.log("No Spoonacular data found. Fallback to Firebase.");
+        }
+
+        // Fetch Firebase recipes
+        const firebaseRecipes = await fetchFirebaseRecipes();
+        if (firebaseRecipes.length === 0) {
+            alert("No recipes found in Firebase.");
+            return;
+        }
+
+        // Select random recipes from Spoonacular and Firebase
+        const randomSpoonacularRecipe = spoonacularRecipe || getRandomRecipe(firebaseRecipes);
+        const randomFirebaseRecipe = getRandomRecipe(firebaseRecipes);
+
+        // Render recipes in the grid
+        renderRecipe(randomSpoonacularRecipe, 'spoonacular');
+        renderRecipe(randomFirebaseRecipe, 'firebase');
+    }
+
+    // Check authentication status and load recipes
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("User authenticated:", user);
+            loadRandomRecipes(); // Load random recipes for authenticated user
+        } else {
+            window.location.href = "auth.html"; // Redirect to login page
+        }
+    });
+    </script>
 </head>
 <body>
     <!-- Main App Content -->
@@ -21,7 +149,7 @@
         <section class="recipe-categories">
             <h2>Explore Categories</h2>
             <div class="categories-grid" id="categories-grid">
-                <!-- Categories will be dynamically loaded here -->
+                <!-- Recipes will be dynamically loaded here -->
             </div>
         </section>
     </main>

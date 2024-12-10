@@ -54,8 +54,8 @@
           <i class="fas fa-eye" id="toggle-login-password" onclick="togglePassword('login-password', 'toggle-login-password')"></i>
         </div>
           <button type="submit" id="login-submit">
-                    <span id="button-text">Post Recipe</span>
-                    <div id="loading-animation" class="loading-container" style="display: none;">
+                    <span id="login-button-text">Post Recipe</span>
+                    <div id="loading-animation2" class="loading-container2" style="display: none;">
                         <svg viewBox="0 0 100 100">
                             <path d="M20,80 L20,20 Q20,10 35,10 H60 Q75,10 75,25 Q75,40 60,40 H35 L60,80"></path>
                         </svg>
@@ -174,18 +174,21 @@ document.getElementById('sign-up-btn').addEventListener('click', function(event)
 
 // Handle Log In
 document.getElementById('login-submit').addEventListener('click', function(event) {
-  event.preventDefault(); // Prevent default button behavior
+  event.preventDefault(); // Prevent default form submission
 
   // Hide the button text and show the loading animation
-  document.getElementById('button-text').style.display = 'none';
-  document.getElementById('loading-animation').style.display = 'block';
+  const loginButtonText = document.getElementById('login-button-text');
+  const loginLoadingAnimation = document.getElementById('loading-animation2');
+  loginButtonText.style.display = 'none';
+  loginLoadingAnimation.style.display = 'block';
 
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value.trim();
 
+  // Validate inputs
   if (!email || !password) {
-    showError("All fields are required!");
-    resetButtonState(); // Reset button state
+    showError("Both email and password are required!");
+    resetLoginButtonState();
     return;
   }
 
@@ -198,15 +201,35 @@ document.getElementById('login-submit').addEventListener('click', function(event
       window.location.href = `wwr.html?uid=${user.uid}`;
     })
     .catch((error) => {
-      showError(error.message); // Show error message in popup
-      resetButtonState(); // Reset button state
+      // Handle Firebase authentication errors
+      console.error("Login error:", error.message);
+
+      // Show user-friendly error message
+      switch (error.code) {
+        case "auth/user-not-found":
+          showError("No user found with this email. Please sign up first.");
+          break;
+        case "auth/wrong-password":
+          showError("Incorrect password. Please try again.");
+          break;
+        case "auth/invalid-email":
+          showError("Invalid email address. Please check your input.");
+          break;
+        default:
+          showError("An error occurred during login. Please try again.");
+      }
+
+      // Reset button state
+      resetLoginButtonState();
     });
 });
 
-// Function to reset button state (hide loading animation, show button text)
-function resetButtonState() {
-  document.getElementById('button-text').style.display = 'block';
-  document.getElementById('loading-animation').style.display = 'none';
+// Function to reset login button state
+function resetLoginButtonState() {
+  const loginButtonText = document.getElementById('login-button-text');
+  const loginLoadingAnimation = document.getElementById('loading-animation2');
+  loginButtonText.style.display = 'block';
+  loginLoadingAnimation.style.display = 'none';
 }
 
     // Switch between Sign Up and Login sections

@@ -3,14 +3,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', sans-serif;
 }
+/* home.css */
 
+ 
 body {
   background-color: #f3f4f6;
   display: flex;
   flex-direction: column;
   height: 100vh;
+  font-family: 'Roboto', sans-serif;
 }
 
 /* App Header */
@@ -19,17 +22,20 @@ body {
   justify-content: space-between;
   align-items: center;
   background-color: #fff;
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  font-family: 'Roboto', sans-serif;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.9);
 }
 
 .app-header .logo {
   font-size: 1.5rem;
   font-weight: bold;
+  font-family: 'Roboto', sans-serif;
 }
 
 .app-header .logo span {
   color: #ff6347;
+  font-family: 'Roboto', sans-serif;
 }
 
 .profile-icon img {
@@ -68,6 +74,7 @@ iframe#content-frame {
   color: #888;
   cursor: pointer;
   transition: color 0.3s ease;
+  text-decoration: none;
 }
 
 nav-btn.active {

@@ -300,7 +300,7 @@ form input:focus {
 .password-container i:hover {
   color: #ff6347;
 }
-.loading-container {
+.loading-container, .loading-container2 {
     display: flex;
     justify-content: center;
     align-items: center;

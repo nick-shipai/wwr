@@ -55,25 +55,34 @@
     }
 
     // Function to fetch and filter Firebase recipes
-    async function fetchFirebaseRecipes(query = "") {
-      const db = getDatabase(app);
-      const recipesRef = ref(db, 'recipes');
-      return new Promise((resolve) => {
-        onValue(recipesRef, (snapshot) => {
-          const data = snapshot.val();
-          if (!data) {
-            resolve([]);
-            return;
-          }
+    async function fetchFirebaseRecipes(query = "", filter = "all") {
+  const db = getDatabase(app);
+  const recipesRef = ref(db, 'recipes');
 
-          // Filter recipes by query
-          const filteredRecipes = Object.values(data).filter((recipe) =>
-            recipe.recipeTitle.toLowerCase().includes(query.toLowerCase())
-          );
-          resolve(filteredRecipes);
-        });
-      });
-    }
+  return new Promise((resolve) => {
+    onValue(recipesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        resolve([]);
+        return;
+      }
+
+      // Get the current time and calculate one week ago
+      const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+      // Filter recipes based on the selected filter
+      let filteredRecipes = Object.values(data).filter((recipe) =>
+        recipe.recipeTitle.toLowerCase().includes(query.toLowerCase())
+      );
+
+      if (filter === "new") {
+        filteredRecipes = filteredRecipes.filter((recipe) => recipe.createdAt >= oneWeekAgo);
+      }
+
+      resolve(filteredRecipes);
+    });
+  });
+}
 
 // Function to fetch and display all recipes
 async function fetchAllSuggestedRecipes(query = "") {
@@ -330,6 +339,302 @@ favoriteIcon.addEventListener("click", () => {
         }
       });
     });
+    
+    async function fetchNewFirebaseRecipes() {
+  const db = getDatabase(app);
+  const recipesRef = ref(db, 'recipes');
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000; // Timestamp for 1 week ago
+
+  return new Promise((resolve) => {
+    onValue(recipesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        resolve([]);
+        return;
+      }
+
+      // Filter recipes created in the last week
+      const newRecipes = Object.values(data).filter((recipe) => {
+        return recipe.createdAt && recipe.createdAt >= oneWeekAgo;
+      });
+
+      resolve(newRecipes);
+    });
+  });
+}
+
+    document.addEventListener("DOMContentLoaded", () => {
+  const sortButtons = document.querySelectorAll("#sorts a");
+
+  sortButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      // Remove the active class from all buttons
+      sortButtons.forEach((btn) => btn.classList.remove("active"));
+      
+      // Add the active class to the clicked button
+      button.classList.add("active");
+    });
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const newButton = document.getElementById("new");
+
+  newButton.addEventListener("click", async () => {
+    const recipesGrid = document.getElementById("recipes-grid");
+    recipesGrid.innerHTML = "<p>Loading new recipes...</p>";
+
+    try {
+      const newRecipes = await fetchNewFirebaseRecipes();
+
+      // Shuffle the array for random order
+      const shuffledRecipes = newRecipes.sort(() => Math.random() - 0.5);
+
+      // Clear and display recipes in the grid
+      recipesGrid.innerHTML = "";
+      if (shuffledRecipes.length === 0) {
+        recipesGrid.innerHTML = "<p>No new recipes found.</p>";
+        return;
+      }
+
+      shuffledRecipes.forEach((recipe) => {
+        const recipeCard = document.createElement("div");
+        recipeCard.classList.add("recipe-card");
+
+        // Create the favorite icon (Font Awesome heart)
+        const favoriteIcon = document.createElement("i");
+        favoriteIcon.classList.add("fas", "fa-heart");
+        favoriteIcon.style.cursor = "pointer";
+        favoriteIcon.style.color = "gray"; // Default color (unfavorite state)
+        favoriteIcon.style.marginLeft = "260px";
+        favoriteIcon.style.marginBottom = "15px";
+        favoriteIcon.style.fontSize = "30px";
+
+        // Initialize the favorite status
+        let isFavorite = false;
+
+        const user = auth.currentUser;
+        if (user) {
+          const favoritesRef = ref(getDatabase(app), `users/${user.uid}/favorites`);
+          onValue(favoritesRef, (snapshot) => {
+            const favorites = snapshot.val() || {};
+            // Check if the recipe is already in the favorites (adjusted for structure: favRecId: recipeId)
+            isFavorite = Object.keys(favorites).includes(`favRecId:${recipe.recipeId}`);
+            favoriteIcon.style.color = isFavorite ? "red" : "gray"; // Update icon color
+          });
+        }
+
+        // Add event listener for the favorite icon
+        favoriteIcon.addEventListener("click", () => {
+          if (!auth.currentUser) {
+            alert("You must be logged in to favorite a recipe.");
+            return;
+          }
+
+          const userRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites`);
+
+          if (isFavorite) {
+            // Remove from favorites using the adjusted path
+            const favoriteRecipeRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites/favRecId:${recipe.recipeId}`);
+            remove(favoriteRecipeRef)
+              .then(() => {
+                alert(`${recipe.recipeTitle} has been removed from favorites.`);
+                favoriteIcon.style.color = "gray"; // Update icon color
+              })
+              .catch((error) => {
+                console.error("Error removing favorite:", error);
+              });
+          } else {
+            // Add to favorites using the adjusted path with more details (foodImage and recipe title)
+            const favoriteRecipeRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites/favRecId:${recipe.recipeId}`);
+            const favoriteData = {
+              foodImage: recipe.foodImage || 'https://via.placeholder.com/400x400', // Store the image URL
+              recipe: recipe.recipeTitle, // Store the recipe title
+            };
+            set(favoriteRecipeRef, favoriteData)
+              .then(() => {
+                alert(`${recipe.recipeTitle} has been added to favorites.`);
+                favoriteIcon.style.color = "red"; // Update icon color
+              })
+              .catch((error) => {
+                console.error("Error adding favorite:", error);
+              });
+          }
+
+          // Toggle the in-memory favorite status
+          isFavorite = !isFavorite;
+        });
+
+        recipeCard.innerHTML = `
+          <a href="recipeTextUser.html?uid=${auth.currentUser?.uid}&recipeId=${recipe.recipeId}">
+            <img src="${recipe.foodImage || 'https://via.placeholder.com/400x400'}" alt="${recipe.recipeTitle}">
+            <h3>${recipe.recipeTitle}</h3>
+          </a>
+        `;
+        
+        // Append the favorite icon to the recipe card
+        recipeCard.appendChild(favoriteIcon);
+
+        // Append the recipe card to the grid
+        recipesGrid.appendChild(recipeCard);
+      });
+    } catch (error) {
+      console.error("Error fetching new recipes:", error);
+      recipesGrid.innerHTML = "<p>Failed to load new recipes. Please try again later.</p>";
+    }
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const allButton = document.getElementById("all");
+
+  allButton.addEventListener("click", () => {
+    const query = document.getElementById("search-input").value.trim(); // Get current search input value
+    fetchAllSuggestedRecipes(query); // Fetch all recipes
+  });
+});
+document.addEventListener("DOMContentLoaded", () => {
+  const allButton = document.getElementById("all");
+
+  allButton.addEventListener("click", () => {
+    const query = document.getElementById("search-input").value.trim(); // Get current search input value
+    fetchAllSuggestedRecipes(query); // Fetch all recipes
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const popularButton = document.getElementById("popular");
+
+  popularButton.addEventListener("click", async () => {
+    const recipesGrid = document.getElementById("recipes-grid");
+    recipesGrid.innerHTML = "<p>Loading popular recipes...</p>";
+
+    // Helper function to format the view count
+    function formatViewCount(count) {
+      if (count >= 1_000_000_000) {
+        return (count / 1_000_000_000).toFixed(1) + 'b'; // 1 billion
+      } else if (count >= 1_000_000) {
+        return (count / 1_000_000).toFixed(1) + 'm'; // 1 million
+      } else if (count >= 1_000) {
+        return (count / 1_000).toFixed(1) + 'k'; // 1 thousand
+      }
+      return count; // Return the count as is if less than 1k
+    }
+
+    try {
+      const db = getDatabase(app);
+      const recipesRef = ref(db, 'recipes');
+
+      // Fetch recipes and sort by view count
+      onValue(recipesRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          recipesGrid.innerHTML = "<p>No popular recipes found.</p>";
+          return;
+        }
+
+        // Map and sort recipes by the view count
+        const popularRecipes = Object.values(data)
+          .map((recipe) => ({
+            ...recipe,
+            viewCount: recipe.views ? Object.keys(recipe.views).length : 0,
+          }))
+          .sort((a, b) => b.viewCount - a.viewCount); // Descending order
+
+        // Clear and display sorted recipes
+        recipesGrid.innerHTML = "";
+        popularRecipes.forEach((recipe) => {
+          const recipeCard = document.createElement("div");
+          recipeCard.classList.add("recipe-card");
+
+          // Create the favorite icon (Font Awesome heart)
+          const favoriteIcon = document.createElement("i");
+          favoriteIcon.classList.add("fas", "fa-heart");
+          favoriteIcon.style.cursor = "pointer";
+          favoriteIcon.style.color = "gray"; // Default color (unfavorite state)
+          favoriteIcon.style.marginLeft = "260px";
+          favoriteIcon.style.marginBottom = "15px";
+          favoriteIcon.style.fontSize = "30px";
+
+          // Initialize the favorite status
+          let isFavorite = false;
+
+          const user = auth.currentUser;
+          if (user) {
+            const favoritesRef = ref(getDatabase(app), `users/${user.uid}/favorites`);
+            onValue(favoritesRef, (snapshot) => {
+              const favorites = snapshot.val() || {};
+              // Check if the recipe is already in the favorites
+              isFavorite = Object.keys(favorites).includes(`favRecId:${recipe.recipeId}`);
+              favoriteIcon.style.color = isFavorite ? "red" : "gray"; // Update icon color
+            });
+          }
+
+          // Add event listener for the favorite icon
+          favoriteIcon.addEventListener("click", () => {
+            if (!auth.currentUser) {
+              alert("You must be logged in to favorite a recipe.");
+              return;
+            }
+
+            const userRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites`);
+
+            if (isFavorite) {
+              // Remove from favorites
+              const favoriteRecipeRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites/favRecId:${recipe.recipeId}`);
+              remove(favoriteRecipeRef)
+                .then(() => {
+                  alert(`${recipe.recipeTitle} has been removed from favorites.`);
+                  favoriteIcon.style.color = "gray"; // Update icon color
+                })
+                .catch((error) => {
+                  console.error("Error removing favorite:", error);
+                });
+            } else {
+              // Add to favorites
+              const favoriteRecipeRef = ref(getDatabase(app), `users/${auth.currentUser.uid}/favorites/favRecId:${recipe.recipeId}`);
+              const favoriteData = {
+                foodImage: recipe.foodImage || 'https://via.placeholder.com/400x400', // Store the image URL
+                recipe: recipe.recipeTitle, // Store the recipe title
+              };
+              set(favoriteRecipeRef, favoriteData)
+                .then(() => {
+                  alert(`${recipe.recipeTitle} has been added to favorites.`);
+                  favoriteIcon.style.color = "red"; // Update icon color
+                })
+                .catch((error) => {
+                  console.error("Error adding favorite:", error);
+                });
+            }
+
+            // Toggle the in-memory favorite status
+            isFavorite = !isFavorite;
+          });
+
+          recipeCard.innerHTML = `
+            <a href="recipeTextUser.html?uid=${auth.currentUser?.uid}&recipeId=${recipe.recipeId}">
+              <img src="${recipe.foodImage || 'https://via.placeholder.com/400x400'}" alt="${recipe.recipeTitle}">
+              <h3>${recipe.recipeTitle}</h3>
+              <p>
+                <i class="fas fa-eye"></i> ${formatViewCount(recipe.viewCount)}
+              </p>
+            </a>
+          `;
+          
+          // Append the favorite icon to the recipe card
+          recipeCard.appendChild(favoriteIcon);
+
+          // Append the recipe card to the grid
+          recipesGrid.appendChild(recipeCard);
+        });
+      });
+    } catch (error) {
+      console.error("Error fetching popular recipes:", error);
+      recipesGrid.innerHTML = "<p>Failed to load popular recipes. Please try again later.</p>";
+    }
+  });
+});
+
   </script>
   <style>
     /* Styles for suggestions dropdown */
@@ -391,6 +696,12 @@ favoriteIcon.addEventListener("click", () => {
 
   <!-- Suggested Recipes -->
   <section class="suggested-recipes">
+      <div id="sorts">
+  <a id="all" class="active">All</a>
+  <a id="new">New</a>
+  <a id="popular">Popular</a>
+</div>
+    </div>
     <h2>Suggested Recipes</h2>
     <div id="recipes-grid">
       <!-- Recipes will be dynamically loaded here -->

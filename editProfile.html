@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="editProfile.css">
+</head>
+<body>
+    <section id="edit-section">
+        <form id="edit-form">
+            <h2>Edit Profile</h2>
+            <br><br>
+            <label for="username">Username:</label>
+            <input type="text" id="username">
+            <label for="bio" id="bioLabel">Bio:</label>
+            <textarea id="bio"></textarea><br>
+            <button id="save">Save Changes</button>
+        </form>
+    </section>
+    <script type="module">
+        // Import Firebase libraries
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+            authDomain: "gyfp-48c48.firebaseapp.com",
+            projectId: "gyfp-48c48",
+            storageBucket: "gyfp-48c48.appspot.com",
+            messagingSenderId: "1098492817072",
+            appId: "1:1098492817072:web:19ffb2510028ad75bf1575"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // Function to fetch user data
+        const fetchUserData = (userId) => {
+            const userRef = ref(db, 'users/' + userId);
+            get(userRef)
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        // Set the username in the form input
+                        document.getElementById('username').value = userData.username || '--';
+                        document.getElementById('bio').value = userData.bio || '--';
+                    } else {
+                        console.log("No user data found.");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching user data:", error);
+                });
+        };
+
+        // Listen for changes in authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is logged in, fetch the user's data
+                fetchUserData(user.uid);
+            } else {
+                // No user is logged in
+                console.log("User is not logged in");
+            }
+        });
+
+        // Add event listener to save the changes when the form is submitted
+        document.getElementById('save').addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent form submission
+
+            const username = document.getElementById('username').value;
+            const bio = document.getElementById('bio').value;
+
+            const user = auth.currentUser;
+            if (user) {
+                // Update only the fields that have changed
+                const userRef = ref(db, 'users/' + user.uid);
+                update(userRef, {
+                    username: username,
+                    bio: bio
+                }).then(() => {
+                    alert('Profile updated successfully!');
+                }).catch((error) => {
+                    console.error("Error saving profile:", error);
+                });
+            } else {
+                alert("You must be logged in to edit your profile.");
+            }
+        });
+    </script>
+</body>
+</html>

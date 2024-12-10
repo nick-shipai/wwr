@@ -11,8 +11,10 @@
         <div id="profilePicDiv">
             <img src="profile.png" alt="" id="profilePic">
         </div>
-        <div id="username"></div>
-        <div id="email"></div>
+        <div id="username">--</div>
+        <div id="email">--</div>
+        
+        <div id="otherSec">
         <button id="edit-pro">Edit Profile</button><br>
         <div id="event">Profile</div>
         <div id="cards">
@@ -22,7 +24,7 @@
                 </div>
                 <div id="text">My Recipes</div>
                 <div id="totalRecipe">
-                    <span>20</span>
+                    <span>--</span>
                 </div>
                 <img src="arrow.png" alt="" id="openProRec" class="arrow">
             </div>
@@ -62,6 +64,7 @@
                 <div id="log-out-text">Log Out</div>
             </div><br><br>
         </div>
+        </div>
     </div>
     
     <!-- Hidden File Input -->
@@ -95,14 +98,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             const uidFromQuery = urlParams.get('uid');
 
-            // First, check if there's a logged-in user (using Firebase auth state)
+            // Check if user is authenticated and load data accordingly
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     if (uidFromQuery && user.uid === uidFromQuery) {
                         fetchUserData(user.uid);
+                        fetchRecipeCount(user.uid);
                     } else {
-                        alert('User is authenticated, but no matching UID in query');
                         fetchUserData(user.uid);
+                        fetchRecipeCount(user.uid);
                     }
                 } else {
                     if (uidFromQuery) {
@@ -110,6 +114,7 @@
                         get(userRef).then(snapshot => {
                             if (snapshot.exists()) {
                                 fetchUserData(uidFromQuery);
+                                fetchRecipeCount(uidFromQuery);
                             } else {
                                 alert('UID not found in database');
                             }
@@ -117,7 +122,8 @@
                             console.error(error.message);
                         });
                     } else {
-                        alert('No authenticated user found');
+                        console.log('No authenticated user found');
+                        window.location.href = "auth.html";
                     }
                 }
             });
@@ -139,6 +145,22 @@
                 console.error("Error fetching user data:", error.message);
             });
         }
+
+    // Function to fetch the total number of recipes from Firebase
+function fetchRecipeCount(uid) {
+    const recipesRef = ref(db, 'users/' + uid + '/yourRecipe');
+    get(recipesRef).then(snapshot => {
+        if (snapshot.exists()) {
+            const recipes = snapshot.val();
+            const totalRecipes = Object.keys(recipes).length; // Count all recipe IDs
+            document.querySelector('#totalRecipe span').innerText = totalRecipes;
+        } else {
+            document.querySelector('#totalRecipe span').innerText = '0'; // Default to 0 if no recipes exist
+        }
+    }).catch(error => {
+        console.error("Error fetching recipes:", error.message);
+    });
+}
 
         // Profile picture upload functionality
         document.getElementById('profilePicDiv').addEventListener('click', () => {
@@ -177,15 +199,31 @@
                 );
             }
         });
+        
+        
+        // Add an event listener to the 'Edit Profile' button
+document.getElementById('edit-pro').addEventListener('click', () => {
+    // Get the current authenticated user
+    const user = auth.currentUser;
+    if (user) {
+        // Redirect to editProfile.html with the user's uid
+        window.location.href = `editProfile.html?uid=${user.uid}`;
+    } else {
+        console.log('No authenticated user found.');
+        window.open("auth.html", "_blank");// Redirect to auth page if no user is authenticated
+        window.close();
+    }
+});
 
-        // Log out functionality
-        document.getElementById('log-out').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                window.location.href = "auth.html";
-            }).catch((error) => {
-                console.error("Error signing out:", error.message);
-                alert("An error occurred while logging out.");
-            });
+       // Log out functionality
+document.getElementById('log-out').addEventListener('click', () => {
+    signOut(auth).then(() => {
+        window.open("auth.html", "_blank"); // Open in a new tab
+        window.close(); // Optionally close the current tab
+    }).catch((error) => {
+        console.error("Error signing out:", error.message);
+        alert("An error occurred while logging out.");
+    });
         });
     </script>
 

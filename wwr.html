@@ -91,7 +91,8 @@
             console.error(error.message);
           });
         } else {
-          alert('No authenticated user found');
+          console.log('No authenticated user found');
+          window.open("auth.html", "_blank");
         }
       }
     });

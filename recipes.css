@@ -45,7 +45,10 @@ body {
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
-
+.search-bar button:active, button:focus {
+    outline: none;
+    -webkit-tap-highlight-color: transparent; 
+}
 .search-bar button:hover {
   background-color: #ffe5e0;
 }
@@ -142,4 +145,27 @@ body {
   height: 30px;
   margin-top: 10px;
   margin-left: 10px;
+}
+#sorts a {
+    color: #ccc;
+    text-decoration: none;
+    margin-left: 50px;
+    
+}
+#sorts {
+   
+}
+#sorts a.active {
+  color: white;
+  background-color: tomato;
+  padding: 5px 10px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+a {
+    text-decoration: none;
+}
+a:focus, a:active {
+    outline: none;
+    -webkit-tap-highlight-color: transparent; /* For mobile devices to remove the tap highlight */
 }

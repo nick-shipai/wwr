@@ -15,13 +15,16 @@
     <div id="user-img-con">
       <img src="profile.png" alt="user-img" id="user-img">
     </div>
-    <div id="username">Mercy David</div>
+    <div id="username">--</div>
     <button id="follow">Follow</button>
   </section>
 
   <section id="foodImageCon">
     <img src="thumbnails.jpg" alt="" id="foodImage">
-  </section><br>
+  </section>
+  <br>
+ <a  href="#video" style="margin-left: 15px; color: #ff6347; text-decoration: none;" id="watchVideo"><b>Watch recipe tutorial</b></a>
+  <br><br>
 
   <label for="ingredient">Ingredients</label><br><br>
   <section id="ingredients-con">
@@ -68,17 +71,61 @@
       if (recipeId) {
         const recipeRef = ref(db, 'recipes/' + recipeId);
         get(recipeRef).then((snapshot) => {
-          if (snapshot.exists()) {
-            const recipeData = snapshot.val();
-            const recipeImage = recipeData.foodImage || 'https://via.placeholder.com/400x400';
-            const recipeIngredients = recipeData.ingredients || 'No ingredients available';
-            const recipeInstructions = recipeData.instructions || 'No instructions available';
-            const posterUid = recipeData.PosterUid || '';
+          // Inside the onAuthStateChanged callback, after fetching recipeData
+if (snapshot.exists()) {
+  const recipeData = snapshot.val();
+  const recipeImage = recipeData.foodImage || 'https://via.placeholder.com/400x400';
+  const recipeIngredients = recipeData.ingredients || 'No ingredients available';
+  const recipeInstructions = recipeData.instructions || 'No instructions available';
+  const recipeVideo = recipeData.video || ''; // Get the video URL (if any)
+  const posterUid = recipeData.PosterUid || '';
 
-            // Set recipe details
-            document.getElementById("foodImage").src = recipeImage;
-            document.getElementById("ingredients-con").textContent = recipeIngredients;
-            document.getElementById("instructions-con").textContent = recipeInstructions;
+  // Set recipe details
+  document.getElementById("foodImage").src = recipeImage;
+  document.getElementById("ingredients-con").textContent = recipeIngredients;
+  document.getElementById("instructions-con").textContent = recipeInstructions;
+
+// Fetch current user's data (already done)
+const userRef1 = ref(db, 'users/' + currentUid);
+get(userRef1).then((snapshot) => {
+  if (snapshot.exists()) {
+    const userData = snapshot.val();
+    const viewUsername = userData.username || 'Unknown User';
+
+    // Update the recipe's views with current user's details
+    const recipeViewsRef = ref(db, 'recipes/' + recipeId + '/views');
+    update(recipeViewsRef, {
+      [currentUid]: {
+        username: viewUsername,
+        uid: currentUid
+      }
+    }).then(() => {
+      console.log("Successfully updated views with current user's data.");
+    }).catch((error) => {
+      console.error("Error updating views:", error);
+    });
+  } else {
+    console.log("User data not found.");
+  }
+}).catch((error) => {
+  console.error("Error fetching user data:", error);
+});
+
+  // Handle video display and redirection
+  const watchVideoLink = document.getElementById("watchVideo");
+  if (recipeVideo) {
+    // Show the "Watch Video" link
+    watchVideoLink.style.display = 'block';
+    watchVideoLink.onclick = () => {
+      window.location.href = `wrrVideo.html?uid=${currentUid}&video=${encodeURIComponent(recipeVideo)}`;
+    };
+  } else {
+    // Hide the "Watch Video" link if no video exists
+    watchVideoLink.style.display = 'none';
+  }
+
+  // Fetch poster's username and profilePic based on posterUid (rest of your code remains here)
+
 
             // Fetch poster's username and profilePic based on posterUid
             if (posterUid) {
@@ -130,7 +177,7 @@
       }
     } else {
       console.log("User not authenticated or UID mismatch.");
-      window.location.href = 'auth.html'; // Replace with actual login page
+      window.location.href = '#'; // Replace with actual login page
     }
   });
 
