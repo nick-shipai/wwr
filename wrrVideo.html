@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Video Tutorial</title>
     <link rel="stylesheet" href="wrrVideo.css">
+    <link rel="icon" href="logo.png">
     <!-- Font Awesome CDN for play/pause icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -35,6 +36,8 @@
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
             cursor: pointer;
+            outline: none;
+  -webkit-tap-highlight-color: transparent;
         }
 
         #playPauseCenterIcon.visible {
@@ -59,6 +62,8 @@
             transform: translate(-50%, -50%);
             z-index: 2;
             cursor: pointer;
+            outline: none;
+  -webkit-tap-highlight-color: transparent;
         }
 
         #rangeCon, #duration, #totalDura {
@@ -73,6 +78,8 @@
             height: 5px;
             background: #ccc;
             cursor: pointer;
+            outline: none;
+  -webkit-tap-highlight-color: transparent;
         }
 
         #range {
@@ -100,7 +107,7 @@
 <body>
     <section id="video-sec">
         <!-- Video Element -->
-        <video id="preVid" autoplay loop muted>
+        <video id="preVid" src="man.mp4" autoplay loop muted>
             Your browser does not support the video tag.
         </video>
 

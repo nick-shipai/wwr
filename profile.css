@@ -29,7 +29,7 @@
 }
 #edit-pro {
     text-align: center;
-    background-color: black;
+    background-color: tomato;
     margin-left: 103px;
     width: 150px;
     color: white;
@@ -78,7 +78,7 @@
     font-weight: bold;
 }
 #totalRecipe {
-    background-color: green;
+    background-color: tomato;
     height: 30px;
     width: 30px;
     border-radius: 50%;
@@ -117,7 +117,7 @@
 }
 #card2 {
     background-color: #f3f4f6;
-    height: 200px;;
+    height: 190px;;
     width: 330px;
     opacity: 1px;
     margin-left: 10px;
@@ -150,7 +150,7 @@
 }
 
 .switch.active {
-  background-color: #4caf50;
+  background-color: tomato;
 }
 
 .switch.active .slider {

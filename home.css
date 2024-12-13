@@ -47,12 +47,26 @@
   color: #333;
 }
 
+/* Recipe Categories */
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
 }
 
+/* Keyframes for fading in the grid */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Category Animation */
 .category {
   background-color: #fff;
   text-align: center;
@@ -60,7 +74,37 @@
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.5s ease;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Keyframes for category item animation */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.category:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.category:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.category:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+.category:nth-child(4) {
+  animation-delay: 0.9s;
 }
 
 .category:hover {
@@ -85,3 +129,5 @@ body {
   height: 100vh;
   margin: 0;
 }
+/* Dark mode for iframe (optional, depending on content) */
+

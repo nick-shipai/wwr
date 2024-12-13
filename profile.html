@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Page</title>
     <link rel="stylesheet" href="profile.css">
+    <link rel="icon" href="logo.png">
 </head>
 <body>
     <div id="container">
@@ -36,7 +37,7 @@
                 <div id="text">Professional Account</div>
                 <img src="arrow.png" alt="" id="openProAcc">
             </div>
-        </div>
+            </div>
         <div id="event">Account</div>
         <div id="card2">
             <div id="send-mail">
@@ -129,22 +130,29 @@
             });
         });
 
-        // Function to fetch user data from Firebase
-        function fetchUserData(uid) {
-            const userRef = ref(db, 'users/' + uid);
-            get(userRef).then(snapshot => {
-                if (snapshot.exists()) {
-                    const userData = snapshot.val();
-                    document.getElementById('username').innerText = userData.username || 'Username not available';
-                    document.getElementById('email').innerText = userData.email || 'Email not available';
-                    if (userData.profilePic) {
-                        document.getElementById('profilePic').src = userData.profilePic;
-                    }
-                }
-            }).catch(error => {
-                console.error("Error fetching user data:", error.message);
-            });
+      // Fetch user data from Firebase
+function fetchUserData(uid) {
+    const userRef = ref(db, 'users/' + uid);
+    get(userRef).then(snapshot => {
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            document.getElementById('username').innerText = userData.username || 'Username not available';
+            document.getElementById('email').innerText = userData.email || 'Email not available';
+            if (userData.profilePic) {
+                document.getElementById('profilePic').src = userData.profilePic;
+            }
+
+            // Check if sendEmail state is present in the user data and set the switch accordingly
+            if (userData.sendEmail) {
+                sendMailSwitch.classList.add('active');
+            } else {
+                sendMailSwitch.classList.remove('active');
+            }
         }
+    }).catch(error => {
+        console.error("Error fetching user data:", error.message);
+    });
+}
 
     // Function to fetch the total number of recipes from Firebase
 function fetchRecipeCount(uid) {
@@ -225,14 +233,97 @@ document.getElementById('log-out').addEventListener('click', () => {
         alert("An error occurred while logging out.");
     });
         });
+        
+        // Add event listener to #myRecipe for redirection
+document.getElementById('myRecipe').addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (user) {
+        // Redirect to myRecipes.html with the user's uid
+        window.location.href = `myRecipes.html?uid=${user.uid}`;
+    } else {
+        console.log('No authenticated user found.');
+        alert("Please log in to view your recipes.");
+        window.open("auth.html", "_blank"); // Redirect to auth page if no user is authenticated
+        window.close();
+    }
+});
+
+// Add event listener to #professional-acc for redirection based on 'professionalAcc' state
+document.getElementById('professional-acc').addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (user) {
+        // Reference to the user's data in Firebase
+        const userRef = ref(db, 'users/' + user.uid);
+
+        // Fetch the user data to check the 'professionalAcc' status
+        get(userRef).then(snapshot => {
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                
+                // Check if 'professionalAcc' is active
+                if (userData.professionalAcc && userData.professionalAcc === 'active') {
+                    // Redirect to dashboard.html if professionalAcc is active
+                    window.location.href = `dashboard.html?uid=${user.uid}`;
+                } else {
+                    // Redirect to createProfessionalAcc.html if professionalAcc is not active
+                    window.location.href = `createProfessionalAcc.html?uid=${user.uid}`;
+                }
+            } else {
+                console.log('User data not found.');
+                alert('User data not found in the database.');
+            }
+        }).catch((error) => {
+            console.error("Error fetching user data:", error.message);
+        });
+    } else {
+        console.log('No authenticated user found.');
+        alert("Please log in to access your professional account.");
+        window.open("auth.html", "_blank"); // Redirect to auth page if no user is authenticated
+        window.close();
+    }
+});
+// Add event listener to the Send Email switch
+const sendMailSwitch = document.querySelector('.switch');
+sendMailSwitch.addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (user) {
+        const userRef = ref(db, 'users/' + user.uid);
+
+        // Toggle the active state
+        const newState = !sendMailSwitch.classList.contains('active');
+        sendMailSwitch.classList.toggle('active', newState);
+
+        // Update the state in the Firebase database
+        update(userRef, { sendEmail: newState }).then(() => {
+            console.log("Send Email state updated:", newState);
+        }).catch((error) => {
+            console.error("Error updating Send Email state:", error);
+        });
+    } else {
+        console.log('No authenticated user found.');
+        alert("Please log in to update this setting.");
+        window.open("auth.html", "_blank");
+        window.close();
+    }
+});
+// Add event listener to #about for redirection
+document.getElementById('about').addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (user) {
+        // Redirect to about.html with the user's uid
+        window.location.href = `about.html?uid=${user.uid}`;
+    } else {
+        console.log('No authenticated user found.');
+        alert("Please log in to access the About page.");
+        window.open("auth.html", "_blank"); // Redirect to auth page if no user is authenticated
+        window.close();
+    }
+});
     </script>
 
     <script>
-        // Switch class for toggling active state
-        const switchDiv = document.querySelector('.switch');
-        switchDiv.addEventListener('click', () => {
-            switchDiv.classList.toggle('active');
-        });
+        
+        
     </script>
 </body>
 </html>

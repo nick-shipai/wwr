@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recipe Details - WWR</title>
   <link rel="stylesheet" href="recipeTextUser.css">
+  <link rel="icon" href="logo.png">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body>
   <section class="recipe-header">
@@ -24,18 +26,24 @@
   </section>
   <br>
  <a  href="#video" style="margin-left: 15px; color: #ff6347; text-decoration: none;" id="watchVideo"><b>Watch recipe tutorial</b></a>
-  <br><br>
-
-  <label for="ingredient">Ingredients</label><br><br>
+  <br><br>  
+<div id="content-wrapper">
+  <label for="ingredient" id="label">Ingredients</label>
+  <button class="copy-btn" id="copy-ingredients-btn">
+    <i class="fas fa-copy"></i> <!-- Copy icon -->
+  </button>
   <section id="ingredients-con">
-      Loading...
-  </section><br>
-
-  <label for="ingredient">Instructions</label><br><br>
-  
-  <section id="instructions-con">
-      Loading...
+    Loading...
   </section>
+
+  <label for="instructions" id="label2">Instructions</label>
+  <button class="copy-btn" id="copy-instructions-btn">
+    <i class="fas fa-copy"></i> <!-- Copy icon -->
+  </button>
+  <section id="instructions-con">
+    Loading...
+  </section>
+</div>
 
   <script type="module">
   // Import Firebase libraries
@@ -71,7 +79,18 @@
       if (recipeId) {
         const recipeRef = ref(db, 'recipes/' + recipeId);
         get(recipeRef).then((snapshot) => {
-          // Inside the onAuthStateChanged callback, after fetching recipeData
+       // Function to format ingredients and instructions with line breaks
+function formatTextWithLineBreaks(text) {
+  // Regular expression for standalone or start-of-line bullets and numbering
+  const bulletPattern = /(^\s*(\d+\.\s*|[-•√°~]))(?!\S)/gm;
+
+  // Replace matching patterns with a line break
+  return text.replace(bulletPattern, function (match) {
+    return `<br>${match.trim()}`;
+  });
+}
+
+// Inside the recipe data fetch
 if (snapshot.exists()) {
   const recipeData = snapshot.val();
   const recipeImage = recipeData.foodImage || 'https://via.placeholder.com/400x400';
@@ -79,11 +98,15 @@ if (snapshot.exists()) {
   const recipeInstructions = recipeData.instructions || 'No instructions available';
   const recipeVideo = recipeData.video || ''; // Get the video URL (if any)
   const posterUid = recipeData.PosterUid || '';
-
-  // Set recipe details
+  
+    // Set recipe details
   document.getElementById("foodImage").src = recipeImage;
-  document.getElementById("ingredients-con").textContent = recipeIngredients;
-  document.getElementById("instructions-con").textContent = recipeInstructions;
+
+  // Format ingredients and instructions
+  document.getElementById("ingredients-con").innerHTML = formatTextWithLineBreaks(recipeIngredients);
+  document.getElementById("instructions-con").innerHTML = formatTextWithLineBreaks(recipeInstructions);
+
+    
 
 // Fetch current user's data (already done)
 const userRef1 = ref(db, 'users/' + currentUid);
@@ -132,23 +155,39 @@ get(userRef1).then((snapshot) => {
               const posterRef = ref(db, 'users/' + posterUid);
               get(posterRef).then((posterSnapshot) => {
                 if (posterSnapshot.exists()) {
-                  const posterData = posterSnapshot.val();
-                  const posterUsername = posterData.username || 'Poster User';
-                  const posterProfilePic = posterData.profilePic || 'profile.png';
+  const posterData = posterSnapshot.val();
+  const posterUsername = posterData.username || "Poster User";
+  const posterProfilePic = posterData.profilePic || "profile.png";
 
-                  // Set the poster's profile image and username
-                  document.getElementById("user-img").src = posterProfilePic;
-                  document.getElementById("username").textContent = posterUsername;
+  // Set the poster's profile image and username
+  document.getElementById("user-img").src = posterProfilePic;
+  document.getElementById("username").textContent = posterUsername;
 
-                  // Check if the current user is following the poster
-                  checkIfFollowing(currentUid, posterUid);
-                } else {
-                  console.log("No poster data found for this posterUid.");
-                }
+  // Adjust font size if username is too long
+  adjustUsernameFontSize();
+
+  // Check if the current user is following the poster
+  checkIfFollowing(currentUid, posterUid);
+} else {
+  console.log("No poster data found for this posterUid.");
+}
               }).catch((error) => {
                 console.error("Error fetching poster data:", error);
               });
             }
+function adjustUsernameFontSize() {
+  const usernameElement = document.getElementById("username");
+  const usernameText = usernameElement.textContent.trim();
+
+  if (usernameText.length > 12) {
+    usernameElement.style.fontSize = "1.2rem";
+  } else {
+    usernameElement.style.fontSize = "1.5rem";
+  }
+}
+
+ 
+adjustUsernameFontSize();
 
             // Fetch current user (follower) details
             const userRef = ref(db, 'users/' + currentUid);
@@ -261,6 +300,48 @@ function toggleFollow(currentUid, posterUid) {
     console.error("Error checking follow status:", error);
   });
 }
+
+// Function to handle copying content
+function setupCopyButtons() {
+  const copyIngredientsBtn = document.getElementById("copy-ingredients-btn");
+  const copyInstructionsBtn = document.getElementById("copy-instructions-btn");
+
+  // Add event listener for ingredients copy button
+  copyIngredientsBtn.addEventListener("click", () => {
+    copyToClipboard("ingredients-con", copyIngredientsBtn);
+  });
+
+  // Add event listener for instructions copy button
+  copyInstructionsBtn.addEventListener("click", () => {
+    copyToClipboard("instructions-con", copyInstructionsBtn);
+  });
+}
+
+
+ 
+
+// Function to copy text to clipboard
+function copyToClipboard(sectionId, button) {
+  const section = document.getElementById(sectionId);
+  const text = section.textContent.trim(); // Get the text content from the section
+  navigator.clipboard.writeText(text).then(() => {
+    // Change button icon to "Copied" (check icon)
+    const icon = button.querySelector('i');
+    icon.classList.remove('fa-copy');   // Remove copy icon
+    icon.classList.add('fa-check');     // Add check icon
+
+    // Revert the icon back to "copy" after 2 seconds
+    setTimeout(() => {
+      icon.classList.remove('fa-check');  // Remove check icon
+      icon.classList.add('fa-copy');      // Add copy icon back
+    }, 5000);
+  }).catch((error) => {
+    console.error("Error copying text:", error);
+  });
+}
+
+// Call the setup function
+setupCopyButtons();
   
 </script>
 </body>

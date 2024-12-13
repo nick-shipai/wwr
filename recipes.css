@@ -9,7 +9,7 @@ body {
 /* Recipes Header */
 .recipes-header {
   background-color: #ff6347;
-  padding: 2rem;
+  padding: 1.1rem;
   text-align: center;
   color: white;
 }
@@ -31,7 +31,8 @@ body {
   padding: 0.8rem;
   border: none;
   border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 1.5rem;
+  outline-color: tomato;
 }
 
 .search-bar button {
@@ -39,7 +40,7 @@ body {
   border: none;
   background-color: white;
   color: #ff6347;
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: bold;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -63,18 +64,46 @@ body {
   margin-bottom: 1rem;
 }
 
+/* Recipe Grid */
 #recipes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
+  opacity: 0;
+  animation: fadeInGrid 1s forwards;
 }
 
+/* Keyframes for fading in the grid */
+@keyframes fadeInGrid {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Recipe Card Animation */
 .recipe-card {
   background-color: white;
   border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Keyframes for each recipe card's animation */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .recipe-card:hover {
@@ -104,13 +133,13 @@ body {
   position: absolute;
   top: 100%;
   left: 0;
-  width: 100%;
+  width: 150%;
   background-color: white;
   border: 1px solid #ccc;
-  max-height: 200px;
+  max-height: 500px;
   overflow-y: auto;
   z-index: 1000;
-  display: none;
+  display: block;
   color: black;
 }
 
@@ -139,6 +168,8 @@ body {
   z-index: 2000; /* Higher z-index to ensure it stays above all other elements */
   
   margin-top: 400px;
+  outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #icon {
@@ -146,15 +177,17 @@ body {
   margin-top: 10px;
   margin-left: 10px;
 }
+
 #sorts a {
     color: #ccc;
     text-decoration: none;
     margin-left: 50px;
-    
+    cursor: pointer;
 }
+
 #sorts {
-   
 }
+
 #sorts a.active {
   color: white;
   background-color: tomato;
@@ -162,10 +195,59 @@ body {
   border-radius: 5px;
   text-decoration: none;
 }
+
 a {
-    text-decoration: none;
+  text-decoration: none;
 }
+
 a:focus, a:active {
-    outline: none;
-    -webkit-tap-highlight-color: transparent; /* For mobile devices to remove the tap highlight */
+  outline: none;
+  -webkit-tap-highlight-color: transparent; /* For mobile devices to remove the tap highlight */
+}
+
+/* Styles for suggestions dropdown */
+#suggestions-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ccc;
+  position: absolute;
+  background-color: white;
+  width: 350px;
+  height: 300px;
+  overflow-y: auto;
+  display: none;
+  z-index: 10;
+  margin-top: 200px;
+  color: black;
+  border-radius: 10px;
+  margin-left: 1px;
+  margin-top: 360px;
+}
+
+#suggestions-list li {
+  padding: 20px;
+  cursor: pointer;
+}
+
+#suggestions-list li:hover {
+  background-color: #f0f0f0;
+}
+
+/* Repeated Icon Container */
+#iconDiv {
+  background: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  position: fixed;
+  top: 10px; /* Adjust the position as needed */
+  right: 10px; /* Adjust the position as needed */
+  z-index: 2000;
+}
+
+#icon {
+  height: 30px;
+  margin-top: 10px;
+  margin-left: 10px;
 }

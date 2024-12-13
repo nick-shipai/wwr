@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="pro.css">
+  <link rel="icon" href="logo.png">
+  <title>WWR - Get Started</title>
+</head>
+<body>
+  <section class="dashboard">
+    <header class="dashboard-header">
+      <h1>Welcome to <span class="brand">WWR</span> Dashboard</h1>
+      <p>Earn by posting your favorite recipes!</p>
+    </header>
+
+    <div class="dashboard-content">
+      <div class="stat-card">
+        <h3>Post</h3>
+        <p>20+ Recipes</p>
+      </div>
+      <div class="stat-card">
+        <h3>Earn</h3>
+        <p>$250+ Monthly</p>
+      </div>
+      <div class="stat-card">
+        <h3>Followers</h3>
+        <p>1000+ Followers</p>
+      </div>
+
+      <div class="cta">
+        <h2>Ready to start earning?</h2>
+        <p>Share your recipes and start earning rewards with every post you share!</p>
+        <button class="cta-btn" id="cta-btn">
+          <span id="login-button-text">Post Recipe</span>
+          <div id="loading-animation2" class="loading-container2" style="display: none;">
+            <svg viewBox="0 0 100 100">
+              <path d="M20,80 L20,20 Q20,10 35,10 H60 Q75,10 75,25 Q75,40 60,40 H35 L60,80"></path>
+            </svg>
+          </div>
+        </button>
+      </div>
+
+      <!-- Motivational Card -->
+      <div class="motivational-card">
+        <h3>You're so close to your first reward!</h3>
+        <p>Post 50 recipes to unlock exclusive rewards and bonuses. Every post counts!</p>
+      </div>
+
+      <!-- Badges Section -->
+      <div class="badges-section">
+        <div class="badge-card">
+          <img src="master.webp" alt="Recipe Master Badge">
+          <h4>Recipe Master</h4>
+          <p>Post 20 recipes to unlock this badge and start gaining followers!</p>
+        </div>
+        <div class="badge-card">
+          <img src="com.webp" alt="Community Favorite Badge">
+          <h4>Community Favorite</h4>
+          <p>Get 10k+ followers to earn this badge and showcase your popularity!</p>
+        </div>
+        <div class="badge-card">
+          <img src="top.webp" alt="Top Contributor Badge">
+          <h4>Top Contributor</h4>
+          <p>Earn this badge by posting 100+ recipes and engaging with the community!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    // Import Firebase libraries
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+        authDomain: "gyfp-48c48.firebaseapp.com",
+        projectId: "gyfp-48c48",
+        storageBucket: "gyfp-48c48.appspot.com",
+        messagingSenderId: "1098492817072",
+        appId: "1:1098492817072:web:19ffb2510028ad75bf1575"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const database = getDatabase(app);
+
+    // Extract 'uid' from the URL if available
+    const urlParams = new URLSearchParams(window.location.search);
+    const uidFromUrl = urlParams.get('uid');
+
+    // Function to check if the user is authenticated
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // If the user is authenticated, check if 'uid' matches
+        if (uidFromUrl && user.uid === uidFromUrl) {
+          console.log("User authenticated via uid in the URL:", user.uid);
+        } else if (!uidFromUrl) {
+          // If no 'uid' is in the URL, consider the user authenticated if logged in
+          console.log("User authenticated via Firebase:", user.uid);
+        } else {
+          console.log("UID in URL does not match the authenticated user.");
+        }
+        
+        // Listen for the button click event
+document.getElementById('cta-btn').addEventListener('click', () => {
+  // Show loading animation and hide text
+  document.getElementById('login-button-text').style.display = 'none';
+  document.getElementById('loading-animation2').style.display = 'block';
+
+  // Reference to the user's recipe data in the database
+  const userRecipesRef = ref(database, `users/${user.uid}/yourRecipe`);
+
+  // Get the user's recipes data
+  get(userRecipesRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      // Check the number of recipes in the database
+      const recipes = snapshot.val();
+      const recipeCount = Object.keys(recipes).length;
+
+      // If the user has less than 20 recipes, redirect to unable.html with uid
+      if (recipeCount < 20) {
+        window.location.href = `unable.html?uid=${user.uid}`;
+      } else {
+        console.log("User has enough recipes:", recipeCount);
+
+        // Update database to mark the professional account as active
+        const userRef = ref(database, `users/${user.uid}`);
+        update(userRef, {
+          professionalAcc: "active"
+        }).then(() => {
+          console.log("Professional account updated to active.");
+          // Redirect to dashboard.html with uid
+          window.location.href = `dashboard.html?uid=${user.uid}`;
+        }).catch((error) => {
+          console.error("Error updating professionalAcc:", error);
+        });
+      }
+    } else {
+    window.location.href = `unable.html?uid=${user.uid}`;
+      console.log("No recipes found for this user.");
+    }
+  }).catch((error) => {
+    console.error("Error fetching data:", error);
+  });
+});
+      } else {
+        // No user is authenticated
+        console.log("No user is authenticated.");
+      }
+    });
+  </script>
+</body>
+</html>

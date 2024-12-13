@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png">
+    <link rel="stylesheet" href="dashboard.css">
+    <title>Dashboard</title>
+</head>
+<body>
+    <div id="profile-container">
+        <div id="profile-con">
+            <img src="" alt="" id="profilePic">
+        </div>
+        <div id="name-work">
+            <div id="username">--</div>
+            <div id="work">Recipe Manager</div>
+        </div>
+    </div>
+    <div id="professional-item">
+        <div id="recipes">
+            <div id="recipeNum" class="num">--</div>
+            <div id="recipeText">recipes</div>
+        </div>
+        <div id="views">
+            <div id="viewNum" class="num">--</div>
+            <div id="viewText">views</div>
+        </div>
+        <div id="followers">
+            <div id="followNum" class="num">--</div>
+            <div id="followText">followers</div>
+        </div>
+    </div>
+    <div id="switch">
+        <button id="recipesSwitch">My Recipes</button>
+        <button id="engagementSwitch">Engagement</button>
+    </div>
+    <div id="grid-container">
+        
+    </div>
+    <button id="postRecipe">Post Recipe</button>
+
+    <script type="module">
+// Import Firebase libraries
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDwKsNlw7wUDyQ_yEUhpYZdHIEnWFqQVyc",
+  authDomain: "gyfp-48c48.firebaseapp.com",
+  projectId: "gyfp-48c48",
+  storageBucket: "gyfp-48c48.appspot.com",
+  messagingSenderId: "1098492817072",
+  appId: "1:1098492817072:web:19ffb2510028ad75bf1575",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getDatabase(app);
+
+// Function to get query parameter by name
+function getQueryParam(param) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(param);
+}
+
+// Function to fetch and display profile picture
+function fetchProfilePic(uid) {
+  const userRef = ref(db, `users/${uid}`);
+  onValue(userRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      const profilePicUrl = userData.profilePic; // Assuming the profile picture URL is stored in 'profilePic'
+
+      if (profilePicUrl) {
+        document.getElementById("profilePic").src = profilePicUrl; // Update the profile picture element
+      } else {
+        document.getElementById("profilePic").src = "profile.png"; // Use a default image if no profile picture exists
+      }
+    } else {
+      console.error("User data not found!");
+    }
+  });
+}
+
+// Function to fetch and count followers
+function fetchFollowersCount(uid) {
+  const followersRef = ref(db, `users/${uid}/followers`);
+  onValue(followersRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const followers = snapshot.val();
+      const count = Object.keys(followers).length; // Count the number of follower UIDs
+      document.getElementById("followNum").textContent = count; // Display the count
+    } else {
+      document.getElementById("followNum").textContent = 0; // No followers
+    }
+  });
+}
+
+// Function to fetch and count recipes
+function fetchRecipeCount(uid) {
+  const recipesRef = ref(db, `users/${uid}/yourRecipe`);
+  onValue(recipesRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const recipes = snapshot.val();
+      const count = Object.keys(recipes).length; // Count the number of recipe IDs
+      document.getElementById("recipeNum").textContent = count; // Display the count
+    } else {
+      document.getElementById("recipeNum").textContent = 0; // No recipes
+    }
+  });
+}
+
+// Function to fetch and calculate the total views for the user's recipes
+function fetchTotalViews(uid) {
+  const recipesRef = ref(db, `users/${uid}/yourRecipe`);
+  onValue(recipesRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const recipes = snapshot.val();
+      let totalViews = 0;
+
+      // Iterate through each recipeId in the user's recipes
+      for (let recipeId in recipes) {
+        // Fetch the views for each recipe from the recipes node
+        const recipeViewsRef = ref(db, `recipes/${recipeId}/views`);
+        onValue(recipeViewsRef, (viewSnapshot) => {
+          if (viewSnapshot.exists()) {
+            const views = viewSnapshot.val();
+            const viewCount = Object.keys(views).length; // Count the number of unique user IDs
+            totalViews += viewCount; // Add to the total views count
+          }
+        });
+      }
+
+      // Display the total views in the #viewNum element
+      setTimeout(() => {
+        document.getElementById("viewNum").textContent = totalViews;
+      }, 1000); // Added a delay to ensure all views are fetched
+    } else {
+      document.getElementById("viewNum").textContent = 0; // No recipes
+    }
+  });
+}
+
+// Check if `uid` is in the query string
+const queryUid = getQueryParam('uid');
+
+if (queryUid) {
+  console.log('UID found in query:', queryUid);
+
+  // Authenticate user based on the UID in the query
+  const userRef = ref(db, 'users/' + queryUid);
+  onValue(userRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      console.log('User authenticated with query UID:', userData);
+
+      // Update the profile container with user data
+      document.getElementById('username').textContent = userData.username || '--';
+
+      // Fetch and display profile picture
+      fetchProfilePic(queryUid);
+
+      // Fetch and display followers count
+      fetchFollowersCount(queryUid);
+
+      // Fetch and display recipes count
+      fetchRecipeCount(queryUid);
+
+      // Fetch and calculate total views for the recipes
+      fetchTotalViews(queryUid);
+
+    } else {
+      console.error('Invalid UID in query string');
+      window.location.href = "login.html"; // Redirect to login if UID is invalid
+    }
+  });
+
+} else {
+  // Check Firebase authentication state
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log('User authenticated through Firebase');
+      const uid = user.uid;
+
+      // Retrieve user data from Firebase
+      const userRef = ref(db, 'users/' + uid);
+      onValue(userRef, (snapshot) => {
+        const userData = snapshot.val();
+        console.log(userData); // Log user data for debugging
+
+        // Update the profile container with user data
+        document.getElementById('username').textContent = userData.username || '--';
+
+        // Fetch and display profile picture
+        fetchProfilePic(uid);
+
+        // Fetch and display followers count
+        fetchFollowersCount(uid);
+
+        // Fetch and display recipes count
+        fetchRecipeCount(uid);
+
+        // Fetch and calculate total views for the recipes
+        fetchTotalViews(uid);
+      });
+
+    } else {
+      console.log('No user authenticated');
+      window.location.href = "login.html"; // Redirect to login if no user is logged in
+    }
+  });
+}
+    </script>
+</body>
+</html>

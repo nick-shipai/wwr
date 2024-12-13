@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recipes - WWR</title>
   <link rel="stylesheet" href="recipes.css">
+  <link rel="icon" href="logo.png">
   <!-- Include Font Awesome CDN for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script defer type="module">
@@ -80,6 +81,7 @@
       }
 
       resolve(filteredRecipes);
+      
     });
   });
 }
@@ -287,6 +289,14 @@ favoriteIcon.addEventListener("click", () => {
       searchBtn.addEventListener("click", () => {
         const query = searchInput.value.trim();
         fetchAllSuggestedRecipes(query);
+        const newButton = document.getElementById('new');
+        const allButton = document.getElementById('all');
+        const popButton = document.getElementById('popular');
+        allButton.classList.add("active");
+        newButton.classList.remove("active");
+        popButton.classList.remove("active");
+        const h2 = document.getElementById("h2");
+    h2.innerHTML = "<p>All Recipes</p>";
       });
 
       // Trigger search on pressing "Enter"
@@ -294,6 +304,14 @@ favoriteIcon.addEventListener("click", () => {
         if (e.key === "Enter") {
           const query = searchInput.value.trim();
           fetchAllSuggestedRecipes(query);
+          const newButton = document.getElementById('new');
+        const allButton = document.getElementById('all');
+        const popButton = document.getElementById('popular');
+        allButton.classList.add("active");
+        newButton.classList.remove("active");
+        popButton.classList.remove("active");
+        const h2 = document.getElementById("h2");
+    h2.innerHTML = "<p>All Recipes</p>";
         }
       });
 
@@ -308,8 +326,7 @@ favoriteIcon.addEventListener("click", () => {
           suggestionsList.style.display = 'none';
         }
       });
-
-      // Handle suggestion click
+       // Handle suggestion click
       suggestionsList.addEventListener("click", (e) => {
         if (e.target.tagName === 'LI') {
           searchInput.value = e.target.textContent;
@@ -376,13 +393,13 @@ favoriteIcon.addEventListener("click", () => {
     });
   });
 });
-
 document.addEventListener("DOMContentLoaded", () => {
   const newButton = document.getElementById("new");
 
   newButton.addEventListener("click", async () => {
     const recipesGrid = document.getElementById("recipes-grid");
     recipesGrid.innerHTML = "<p>Loading new recipes...</p>";
+    h2.innerHTML = "<p>New Recipes</p>";
 
     try {
       const newRecipes = await fetchNewFirebaseRecipes();
@@ -499,6 +516,8 @@ document.addEventListener("DOMContentLoaded", () => {
   allButton.addEventListener("click", () => {
     const query = document.getElementById("search-input").value.trim(); // Get current search input value
     fetchAllSuggestedRecipes(query); // Fetch all recipes
+    const h2 = document.getElementById("h2");
+    h2.innerHTML = "<p>All Recipes</p>";
   });
 });
 
@@ -508,6 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
   popularButton.addEventListener("click", async () => {
     const recipesGrid = document.getElementById("recipes-grid");
     recipesGrid.innerHTML = "<p>Loading popular recipes...</p>";
+    h2.innerHTML = "<p>Popular Recipes</p>";
 
     // Helper function to format the view count
     function formatViewCount(count) {
@@ -634,54 +654,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-
   </script>
-  <style>
-    /* Styles for suggestions dropdown */
-    #suggestions-list {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-      border: 1px solid #ccc;
-      position: absolute;
-      background-color: white;
-      width: 250px;
-      max-height: 150px;
-      overflow-y: auto;
-      display: none;
-      z-index: 10;
-      margin-top: 200px;
-      color: black;
-      border-radius: 10px;
-      margin-left: -50px;
-    }
-
-    #suggestions-list li {
-      padding: 20px;
-      cursor: pointer;
-    }
-
-    #suggestions-list li:hover {
-      background-color: #f0f0f0;
-    }
-
-    #iconDiv {
-      background: white;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      position: fixed;
-      top: 10px; /* Adjust the position as needed */
-      right: 10px; /* Adjust the position as needed */
-      z-index: 2000;
-    }
-
-    #icon {
-      height: 30px;
-      margin-top: 10px;
-      margin-left: 10px;
-    }
-  </style>
+  <script src="other.js" type="module"></script>
 </head>
 <body>
   <!-- Recipes Header -->
@@ -689,7 +663,9 @@ document.addEventListener("DOMContentLoaded", () => {
     <h1>Find Your Favorite Recipes</h1>
     <section class="search-bar">
       <input type="search" id="search-input" placeholder="Search recipes...">
-      <button id="search-btn">Search</button>
+      <button id="search-btn">     
+      <i class="fas fa-search"></i>
+      </button>      
       <ul id="suggestions-list"></ul> <!-- Suggestions list -->
     </section>
   </section>
@@ -697,13 +673,14 @@ document.addEventListener("DOMContentLoaded", () => {
   <!-- Suggested Recipes -->
   <section class="suggested-recipes">
       <div id="sorts">
-  <a id="all" class="active">All</a>
-  <a id="new">New</a>
-  <a id="popular">Popular</a>
+  <a id="all" href="#" class="active">All</a>
+  <a id="new" href="#">New</a>
+  <a id="popular" href="#">Popular</a>
 </div>
     </div>
-    <h2>Suggested Recipes</h2>
+    <h2 id="h2">All Recipes</h2>
     <div id="recipes-grid">
+        <div class="recipe-card"> ... </div>
       <!-- Recipes will be dynamically loaded here -->
     </div>
   </section>

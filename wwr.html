@@ -7,13 +7,7 @@
   <link rel="stylesheet" href="wwr.css">
 </head>
 <body>
-  <!-- App Header -->
-  <header class="app-header">
-    <div class="logo">WW<span>R</span></div>
-    <div class="profile-icon">
-      <img src="profile.png" alt="Profile" id="profilePic">
-    </div>
-  </header>
+ 
 
   <!-- Main App Content -->
   <main class="app-content">
@@ -73,7 +67,6 @@
         } else {
           // If the user is logged in but no UID in query, treat them as authenticated
           alert('User is authenticated, no UID needed');
-          fetchUserProfilePic(user.uid);
         }
       } else {
         if (uidFromQuery) {
@@ -83,7 +76,6 @@
             if (snapshot.exists()) {
               alert('User is authenticated via UID');
               const userData = snapshot.val();
-              document.getElementById('profilePic').src = userData.profilePic || 'profile.png'; // Default profile picture
             } else {
               alert('UID not found in database');
             }
@@ -98,17 +90,7 @@
     });
   });
 
-  function fetchUserProfilePic(uid) {
-    const userRef = ref(db, 'users/' + uid);
-    onValue(userRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const userData = snapshot.val();
-        document.getElementById('profilePic').src = userData.profilePic || 'profile.png'; // Default profile picture
-      }
-    }, (error) => {
-      console.error("Error fetching profile picture:", error.message);
-    });
-  }
+   
 
   window.switchTab = function (page) {
     // Get the user UID from the current authentication state
@@ -159,14 +141,8 @@
     updateActiveTab(currentPage);
   });
 
-  // Add event listener for profile icon click
-  document.querySelector('.profile-icon').addEventListener('click', () => {
-    const uid = auth.currentUser ? auth.currentUser.uid : null;
-    if (uid) {
-      const iframe = document.getElementById('content-frame');
-      iframe.src = `profile.html?uid=${uid}`;
-    }
-  });
+ 
+   
   </script>
 </body>
 </html>

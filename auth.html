@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WWR | Authentication</title>
   <link rel="stylesheet" href="auth.css">
+  <link rel="icon" href="logo.png">
   <!-- Font Awesome for the eye icon -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
@@ -118,14 +119,18 @@ document.getElementById('sign-up-btn').addEventListener('click', function(event)
   event.preventDefault(); // Prevent form submission
 
   // Hide the button text and show the loading animation
-  document.getElementById('button-text').style.display = 'none';
-  document.getElementById('loading-animation').style.display = 'block';
+  const buttonText = document.getElementById('button-text');
+  const loadingAnimation = document.getElementById('loading-animation');
+  buttonText.style.display = 'none';
+  loadingAnimation.style.display = 'block';
 
-  const username = document.getElementById('signup-username').value;
-  const email = document.getElementById('signup-email').value;
-  const password = document.getElementById('signup-password').value;
-  const confirmPassword = document.getElementById('confirm-password').value;
+  // Get input values
+  const username = document.getElementById('signup-username').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value.trim();
+  const confirmPassword = document.getElementById('confirm-password').value.trim();
 
+  // Validate inputs
   if (!username || !email || !password || !confirmPassword) {
     showError("All fields are required!");
     resetButtonState(); // Reset button state
@@ -143,34 +148,51 @@ document.getElementById('sign-up-btn').addEventListener('click', function(event)
     .then((userCredential) => {
       const user = userCredential.user;
 
-      // Save user data to Firebase Realtime Database after successful creation
+      // Save user data to Firebase Realtime Database
       const userRef = ref(db, 'users/' + user.uid); // Define the reference path for user data
-      set(userRef, {
+      return set(userRef, {
         username: username,
         email: email,
-        // Password is omitted for security reasons
-      })
-      .then(() => {
+        // Do not store the password for security reasons
+      }).then(() => {
         // Successfully saved user data to the database
         console.log("User data saved to the database!");
 
         // Redirect to home.html with UID in query parameter
         window.location.href = `wwr.html?uid=${user.uid}`;
-      })
-      .catch((error) => {
-        // Handle database saving error
-        console.error("Error saving user data:", error.message);
-        showError("There was an error saving your data. Please try again.");
-        resetButtonState(); // Reset button state
       });
     })
     .catch((error) => {
-      // Handle Firebase Authentication errors
-      console.error("Error creating user:", error.message);
-      showError(error.message); // Show error message in popup
-      resetButtonState(); // Reset button state
+      // Handle Firebase errors
+      console.error("Error during sign-up:", error.message);
+
+      // Show user-friendly error messages
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          showError("This email is already in use. Please log in.");
+          break;
+        case "auth/invalid-email":
+          showError("The email address is not valid.");
+          break;
+        case "auth/weak-password":
+          showError("The password is too weak. Use at least 6 characters.");
+          break;
+        default:
+          showError("An error occurred during sign-up. Please try again.");
+      }
+
+      // Reset button state
+      resetButtonState();
     });
 });
+
+// Function to reset the button's state
+function resetButtonState() {
+  const buttonText = document.getElementById('button-text');
+  const loadingAnimation = document.getElementById('loading-animation');
+  buttonText.style.display = 'block';
+  loadingAnimation.style.display = 'none';
+}
 
 // Handle Log In
 document.getElementById('login-submit').addEventListener('click', function(event) {

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="unable.css">
+  <link rel="icon" href="logo.png">
+  <title>Unable to Proceed</title>
+</head>
+<body>
+  <section class="unable-section">
+    <div class="message-container">
+      <h1>Oops! You're almost there!</h1>
+      <p>You need at least 20 recipes to proceed. Keep posting your delicious recipes and earn rewards!</p>
+      
+      <div class="cta-container">
+        <button class="cta-btn" onclick="goBackToDashboard()">Back to Home</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Extract 'uid' from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get('uid');
+
+    // Function to redirect to dashboard with the same UID in a new tab and close the current tab
+    function goBackToDashboard() {
+      // Open the dashboard in a new tab
+      window.open(`wwr.html?uid=${uid}`, '_blank');
+      
+      // Close the current tab
+      window.close();
+    }
+  </script>
+</body>
+</html>

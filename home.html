@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>World Wide Recipe</title>
     <link rel="stylesheet" href="home.css">
+    <link rel="icon" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <script type="module" defer>
+<script type="module" defer>
     // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
@@ -71,32 +72,44 @@
     }
 
     // Function to render recipe in the grid
-    function renderRecipe(recipe, source) {
-        const categoriesGrid = document.getElementById('categories-grid');
-        const recipeElement = document.createElement('div');
-        recipeElement.classList.add('category');
+    function renderRecipe(recipe, source, uid) {
+    const categoriesGrid = document.getElementById('categories-grid');
+    const recipeElement = document.createElement('div');
+    recipeElement.classList.add('category');
 
-        const recipeImage = document.createElement('img');
-        recipeImage.src = recipe.image || recipe.foodImage || "default.jpg"; // Fallback image
-        recipeImage.alt = recipe.title || recipe.recipeTitle || "Recipe";
+    // Add a delay to stagger animations
+    const childrenCount = categoriesGrid.childElementCount;
+    recipeElement.style.animationDelay = `${childrenCount * 0.1}s`;
 
-        const recipeName = document.createElement('p');
-        recipeName.textContent = recipe.title || recipe.recipeTitle || "Random Recipe";
+    const recipeImage = document.createElement('img');
+    recipeImage.src = recipe.image || recipe.foodImage || "default.jpg"; // Fallback image
+    recipeImage.alt = recipe.title || recipe.recipeTitle || "Recipe";
 
-        // Create a link to the recipe page
-        const recipeLink = document.createElement('a');
-        recipeLink.id = 'recipeLink';
-        recipeLink.style.textDecoration = 'none';
-        recipeLink.href = `recipes.html?category=${encodeURIComponent(recipe.title || recipe.recipeTitle)}`;
+    const recipeName = document.createElement('p');
+    recipeName.textContent = recipe.title || recipe.recipeTitle || "Random Recipe";
 
-        // Add the image and name inside the link
-        recipeLink.appendChild(recipeImage);
-        recipeLink.appendChild(recipeName);
+    const recipeWrapper = document.createElement('div');
+    recipeWrapper.classList.add('recipe-wrapper');
+    recipeWrapper.setAttribute('data-recipeId', recipe.id || recipe.recipeId);
+    recipeWrapper.setAttribute('data-source', source);
 
-        // Append the link to the grid
-        recipeElement.appendChild(recipeLink);
-        categoriesGrid.appendChild(recipeElement);
-    }
+    recipeWrapper.appendChild(recipeImage);
+    recipeWrapper.appendChild(recipeName);
+
+    recipeWrapper.addEventListener('click', () => {
+        const recipeId = recipeWrapper.getAttribute('data-recipeId');
+        const source = recipeWrapper.getAttribute('data-source');
+
+        if (source === 'spoonacular') {
+            window.location.href = `recipeText.html?id=${recipeId}`;
+        } else if (source === 'firebase') {
+            window.location.href = `recipeTextUser.html?uid=${uid}&recipeId=${recipeId}`;
+        }
+    });
+
+    recipeElement.appendChild(recipeWrapper);
+    categoriesGrid.appendChild(recipeElement);
+}
 
     // Fetch and display random recipes
     async function loadRandomRecipes() {
@@ -119,9 +132,17 @@
         const randomSpoonacularRecipe = spoonacularRecipe || getRandomRecipe(firebaseRecipes);
         const randomFirebaseRecipe = getRandomRecipe(firebaseRecipes);
 
+        // Get current user UID
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Please log in to view recipes.");
+            return;
+        }
+        const uid = user.uid;
+
         // Render recipes in the grid
-        renderRecipe(randomSpoonacularRecipe, 'spoonacular');
-        renderRecipe(randomFirebaseRecipe, 'firebase');
+        renderRecipe(randomSpoonacularRecipe, 'spoonacular', uid);
+        renderRecipe(randomFirebaseRecipe, 'firebase', uid);
     }
 
     // Check authentication status and load recipes
@@ -130,10 +151,11 @@
             console.log("User authenticated:", user);
             loadRandomRecipes(); // Load random recipes for authenticated user
         } else {
-            window.location.href = "auth.html"; // Redirect to login page
+            window.open("auth.html", "_blank"); // Redirect to login page
+            window.close();
         }
     });
-    </script>
+</script>
 </head>
 <body>
     <!-- Main App Content -->
@@ -150,6 +172,7 @@
             <h2>Explore Categories</h2>
             <div class="categories-grid" id="categories-grid">
                 <!-- Recipes will be dynamically loaded here -->
+                <p>loading...</p>
             </div>
         </section>
     </main>

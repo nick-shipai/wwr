@@ -1,0 +1,105 @@
+* {
+    
+}
+#profile-con {
+  width: 80px;
+  height: 80px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Horizontal offset, Vertical offset, Blur radius, Color */
+  border: 3px solid white;
+ margin-left: 25px;
+ margin-top: 50px;
+}
+#profile-con img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+#profile-container {
+    display: flex;
+}
+#username {
+    margin-top: 75px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-left: 15px;
+}
+#work {
+    margin-left: 15px;
+    color: #ccc;
+    font-weight: bold;
+}
+#professional-item {
+    box-shadow: 0 4px 8px 1px rgba(0, 0, 0, 0.1);
+    height: 80px;
+    margin-top: 20px;
+    width: 320px;  
+    margin-left: 15px;
+    display: flex;
+}
+
+#recipes, #views, #followers {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+    padding: 20px;
+}
+
+.num {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+#recipeText, #viewText, #followText {
+    color: gray;
+    margin-top: 5px;  /* Ensure a small gap between the number and the text */
+}
+
+#recipes, #views, #followers {
+    justify-content: center;  /* Align the text with the number vertically */
+}
+#recipesSwitch {
+    background-color: tomato;
+    width: 160px;
+    margin-left: 15px;
+    color: white;
+    border: 1px solid transparent;  /* Add a transparent border to ensure radius applies */
+    height: 45px;
+    font-size: 1.2rem;
+    border-top-left-radius: 5px;  /* Apply border radius to the top-left corner */
+    border-bottom-left-radius: 5px;  /* Apply border radius to the bottom-left corner */
+    margin-top: 10px;
+}
+#engagementSwitch {
+    background-color: white;
+    width: 160px;
+    color: black;
+    border: 0px solid black;  /* Add a transparent border to ensure radius applies */
+    height: 45px;
+    font-size: 1.2rem;
+    border-top-right-radius: 5px;  /* Apply border radius to the top-left corner */
+    border-bottom-right-radius: 5px;  /* Apply border radius to the bottom-left corner */
+    margin-top: 10px;
+    box-shadow: 0 4px 8px 1px rgba(0, 0, 0, 0.1);
+}
+#switch {
+    display: flex;
+}
+#grid-container {
+    margin: 0;
+    padding: 0;
+}
+#postRecipe {
+    background-color: tomato;
+    width: 320px;
+    margin-left: 15px;
+    color: white;
+    border: 1px solid transparent;  /* Add a transparent border to ensure radius applies */
+    height: 45px;
+    font-size: 1.2rem;
+    margin-top: 10px;
+    position: fixed;
+    border-radius: 5px;
+    margin-top: 250px;
+}
