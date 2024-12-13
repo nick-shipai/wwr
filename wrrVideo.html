@@ -6,7 +6,7 @@
     <title>Watch Video Tutorial</title>
     <link rel="stylesheet" href="wrrVideo.css">
     <link rel="icon" href="logo.png">
-    <!-- Font Awesome CDN for play/pause icons -->
+    <!-- Font Awesome CDN for play/pause icons and 3-dot menu -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         #video-sec {
@@ -37,7 +37,7 @@
             transition: opacity 0.5s ease-in-out;
             cursor: pointer;
             outline: none;
-  -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #playPauseCenterIcon.visible {
@@ -63,7 +63,7 @@
             z-index: 2;
             cursor: pointer;
             outline: none;
-  -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #rangeCon, #duration, #totalDura {
@@ -79,7 +79,7 @@
             background: #ccc;
             cursor: pointer;
             outline: none;
-  -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #range {
@@ -102,21 +102,54 @@
         #totalDura {
             right: 10%;
         }
+
+        /* 3-dot menu style */
+        #threeDotMenu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            z-index: 4;
+        }
+
+        #dropdownMenu {
+            position: absolute;
+            top: 30px;
+            right: 0;
+            background-color: #333;
+            border-radius: 5px;
+            display: none;
+            z-index: 5;
+        }
+
+        #dropdownMenu a {
+            display: block;
+            padding: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        #dropdownMenu a:hover {
+            background-color: #555;
+        }
     </style>    
 </head>
 <body>
     <section id="video-sec">
         <!-- Video Element -->
-        <video id="preVid" src="man.mp4" autoplay loop muted>
+        <video id="preVid" autoplay loop muted>
             Your browser does not support the video tag.
         </video>
 
         <!-- Loader Spinner -->
         <div id="loader" class="loading-container" style="display: none;">
-                        <svg viewBox="0 0 100 100">
-                            <path d="M20,80 L20,20 Q20,10 35,10 H60 Q75,10 75,25 Q75,40 60,40 H35 L60,80"></path>
-                        </svg>
-                    </div>
+            <svg viewBox="0 0 100 100">
+                <path d="M20,80 L20,20 Q20,10 35,10 H60 Q75,10 75,25 Q75,40 60,40 H35 L60,80"></path>
+            </svg>
+        </div>
 
         <!-- Play Thumbnail -->
         <div id="thumbnail">
@@ -131,10 +164,18 @@
             <div id="range"></div>
         </div>
         <div id="duration">00:00</div> / <div id="totalDura">00:00</div>
+
+        <!-- Three Dot Icon for Menu -->
+        <i id="threeDotMenu" class="fas fa-ellipsis-v"></i>
+
+        <!-- Dropdown Menu -->
+        <div id="dropdownMenu">
+            <a id="downloadBtn" href="#" download>Download Video</a>
+        </div>
     </section>
 
     <script type="module">
-        // Import Firebase libraries
+        // Firebase initialization and setup
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
@@ -162,7 +203,11 @@
         const totalDurationDisplay = document.getElementById('totalDura');
         const rangeElement = document.getElementById('range');
         const rangeContainer = document.getElementById('rangeCon');
+        const threeDotMenu = document.getElementById('threeDotMenu');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        const downloadBtn = document.getElementById('downloadBtn');
         let centerIconTimeout;
+        let currentVideoUrl;
 
         // Helper function to format time
         const formatTime = (seconds) => {
@@ -195,6 +240,7 @@
             loader.style.display = 'block';
             getDownloadURL(storageRef(storage, videoUrl))
                 .then((url) => {
+                    currentVideoUrl = url;
                     videoElement.src = url;
 
                     videoElement.addEventListener('loadedmetadata', () => {
@@ -238,37 +284,35 @@
                 showCenterIcon('fa-play');
             }
         });
-        
-        // Detect double-click on the right side to fast-forward
-videoElement.addEventListener('dblclick', (e) => {
-    const rect = videoElement.getBoundingClientRect();
-    const clickX = e.clientX;
 
-    // Check if the click was on the right side
-    if (clickX > rect.width / 2) {
-        videoElement.currentTime = Math.min(videoElement.currentTime + 2, videoElement.duration);
-        showCenterIcon('fa-forward'); // Display a forward icon temporarily
-    } else {
-        // If clicked on the left side, rewind
-        videoElement.currentTime = Math.max(videoElement.currentTime - 2, 0);
-        showCenterIcon('fa-backward'); // Display a backward icon temporarily
-    }
-});
+        // Video start playing automatically or when clicked
+        videoElement.addEventListener('play', () => {
+            playPauseCenterIcon.classList.remove('fa-play');
+            playPauseCenterIcon.classList.add('fa-pause');
+            playThumbnail.style.display = 'none';  // Hide the thumbnail when the video plays
+            videoElement.muted = false;  // Unmute the video when it starts playing
+        });
 
+        // Video paused or stopped
+        videoElement.addEventListener('pause', () => {
+            playPauseCenterIcon.classList.remove('fa-pause');
+            playPauseCenterIcon.classList.add('fa-play');
+        });
 
-       // Video start playing automatically or when clicked
-videoElement.addEventListener('play', () => {
-    playPauseCenterIcon.classList.remove('fa-play');
-    playPauseCenterIcon.classList.add('fa-pause');
-    playThumbnail.style.display = 'none';  // Hide the thumbnail when the video plays
-    videoElement.muted = false;  // Unmute the video when it starts playing
-});
+        // Show/Hide dropdown on 3-dot icon click
+        threeDotMenu.addEventListener('click', () => {
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        });
 
-// Video paused or stopped
-videoElement.addEventListener('pause', () => {
-    playPauseCenterIcon.classList.remove('fa-pause');
-    playPauseCenterIcon.classList.add('fa-play');
-});
+        // Handle video download
+        downloadBtn.addEventListener('click', () => {
+            if (currentVideoUrl) {
+                const link = document.createElement('a');
+                link.href = currentVideoUrl;
+                link.download = 'video.mp4'; // Set a default filename
+                link.click();
+            }
+        });
 
         // Authenticate user and load video
         onAuthStateChanged(auth, (user) => {
@@ -278,12 +322,12 @@ videoElement.addEventListener('pause', () => {
                 if (videoPath) {
                     loadVideo(decodeURIComponent(videoPath));
                 } else {
-                 
-                    
+                    console.log('No video path provided');
                 }
             } else {
-                window.location.href = "auth.html";
-                console.log('Not authenticated')
+                window.open("auth.html", "_blank"); // Redirect to auth page if no user is authenticated
+                window.close();
+                console.log('Not authenticated');
             }                
         });
     </script>

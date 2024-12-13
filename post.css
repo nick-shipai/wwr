@@ -11,6 +11,7 @@ body {
     background-color: white; /* Slightly off-white for a soft look */
     color: #333;
     line-height: 1.6;
+    font-family: Arial, sans-serif;
 }
 
 /* Container Styles */
@@ -272,4 +273,107 @@ path {
 
 #close-modal:hover {
     background-color: #45a049;
+}
+/* General styling */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    font-family: Arial, sans-serif;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    
+}
+
+/* Style the dropdown selected area */
+.dropdown-selected {
+    padding: 10px;
+    background-color: #fff;
+    color: #333;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Dropdown options container */
+.dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1;
+}
+
+/* Search bar container */
+.search-container {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: none;
+    outline: none;
+}
+
+.search-icon {
+    margin-left: -30px;
+    color: #888;
+}
+
+/* Individual dropdown options */
+.dropdown-option {
+    padding: 10px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-option:hover {
+    background-color: #f1f1f1;
+}
+
+/* Display dropdown options when clicked */
+.custom-dropdown.open .dropdown-options {
+    display: block;
+}
+
+/* Styling for when search input is focused */
+.search-container input:focus {
+    border: 1px solid #007bff;
+}
+#selected-countries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+#selected-countries .country-tag {
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#selected-countries .country-tag .remove-country {
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
 }

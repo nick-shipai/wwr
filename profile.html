@@ -124,7 +124,8 @@
                         });
                     } else {
                         console.log('No authenticated user found');
-                        window.location.href = "auth.html";
+                        window.open("auth.html", "_blank"); // Redirect to auth page if no user is authenticated
+        window.close();
                     }
                 }
             });
